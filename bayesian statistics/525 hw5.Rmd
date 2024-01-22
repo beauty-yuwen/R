@@ -1,0 +1,505 @@
+---
+title: "525 hw5"
+output: pdf_document
+date: "2023-10-16"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem 1.3
+
+```{r, echo=FALSE}
+I <- 5
+J <- 1
+sigma_sq_eps <- 1
+sigma_sq_alpha <- 1
+
+# Generate data
+set.seed(123)
+mu_true <- rnorm(1)
+alpha_true <- rnorm(I)
+Y <- matrix(rnorm(I * J, mean = mu_true + alpha_true, sd = sqrt(sigma_sq_eps)), ncol = J)
+
+# Initialize variables
+n_iterations <- 10000
+mu_samples_1 <- numeric(n_iterations)
+alpha_samples_1 <- matrix(0, nrow = I, ncol = n_iterations)
+mu_samples_2 <- numeric(n_iterations)
+eta_samples_2 <- matrix(0, nrow = I, ncol = n_iterations)
+
+# Gibbs sampler for parametrization (i)
+for (iteration in 1:n_iterations) {
+  # Sample mu
+  mu_samples_1[iteration] <- rnorm(1,mean=(1/I*J)*sum(Y - alpha_samples_1[, iteration]),sd=1/(I*J))
+  
+  # Sample alpha
+  for (i in 1:I) {
+    alpha_samples_1[i, iteration] = rnorm(1, mean = Y[i] - mu_samples_1[iteration], sd = sqrt(sigma_sq_alpha))
+  }
+}
+
+# Gibbs sampler for parametrization (ii)
+for (iteration in 1:n_iterations) {
+  # Sample mu
+  mu_samples_2[iteration] <- rnorm(1,mean=(1/I*J)*sum(Y - alpha_samples_1[, iteration]),sd=1/(I*J))
+  
+  # Sample eta
+  for (i in 1:I) {
+    eta_samples_2[i, iteration] <- rnorm(1,  alpha_samples_1[i, iteration]+ mu_samples_2[iteration], sd = sqrt(sigma_sq_alpha))
+  }
+}
+
+acf_mu_1 <- acf(mu_samples_1,plot=TRUE)
+acf_alpha_1 <- apply(alpha_samples_1,1,acf)
+acf_mu_2 <- acf(mu_samples_2,plot=TRUE)
+acf_eta_2 <- apply(eta_samples_2, 1, acf)
+
+for (i in 1:I) {
+  plot(acf_alpha_1[[i]], main = paste("Autocorrelation of a", i, " (Parametrization i)"))
+}
+for (i in 1:I) {
+  plot(acf_eta_2[[i]], main = paste("Autocorrelation of eta", i, " (Parametrization ii)"))
+}
+cross_corr_1=c(rep(0,I))
+cross_corr_2=c(rep(0,I))
+for(j in 1:I)
+  {cross_corr_1[j] <- cor(mu_samples_1, alpha_samples_1[j,])
+  cross_corr_2[j] <- cor(mu_samples_2, eta_samples_2[j,])}
+
+# Plot cross-correlations
+par(mfrow = c(1, 2))
+plot(cross_corr_1,type='l', main = "Cross-Correlations (Parametrization i)")
+plot(cross_corr_2, type='l',main = "Cross-Correlations (Parametrization ii)")
+
+
+for(i in 1:I)
+  {plot(mu_samples_1,alpha_samples_1[i,])
+  plot(mu_samples_2,eta_samples_2[i,])}
+```
+#According to the plots, the parametrization (ii) performs better. 
+
+## Problem 1.4
+
+```{r, echo=FALSE}
+# Set the parameters
+I <- 5
+J <- 1
+sigma_sq_eps <- 1
+sigma_sq_alpha <- 10
+
+# Generate data
+set.seed(123)
+mu_true <- rnorm(1)
+alpha_true <- rnorm(I)
+Y <- matrix(rnorm(I * J, mean = mu_true + alpha_true, sd = sqrt(sigma_sq_eps)), ncol = J)
+
+# Initialize variables
+n_iterations <- 10000
+mu_samples_1 <- numeric(n_iterations)
+alpha_samples_1 <- matrix(0, nrow = I, ncol = n_iterations)
+mu_samples_2 <- numeric(n_iterations)
+eta_samples_2 <- matrix(0, nrow = I, ncol = n_iterations)
+
+# Gibbs sampler for parametrization (i)
+for (iteration in 1:n_iterations) {
+  # Sample mu
+  mu_samples_1[iteration] <- rnorm(1,mean=(1/I*J)*sum(Y - alpha_samples_1[, iteration]),sd=1/(I*J))
+  
+  # Sample alpha
+  for (i in 1:I) {
+    alpha_samples_1[i, iteration] = rnorm(1, mean = Y[i] - mu_samples_1[iteration], sd = sqrt(sigma_sq_alpha))
+  }
+}
+
+# Gibbs sampler for parametrization (ii)
+for (iteration in 1:n_iterations) {
+  # Sample mu
+  mu_samples_2[iteration] <- rnorm(1,mean=(1/I*J)*sum(Y - alpha_samples_1[, iteration]),sd=1/(I*J))
+  
+  # Sample eta
+  for (i in 1:I) {
+    eta_samples_2[i, iteration] <- rnorm(1,  alpha_samples_1[i, iteration]+ mu_samples_2[iteration], sd = sqrt(sigma_sq_alpha))
+  }
+}
+
+acf_mu_1 <- acf(mu_samples_1,plot=TRUE)
+acf_alpha_1 <- apply(alpha_samples_1,1,acf)
+acf_mu_2 <- acf(mu_samples_2,plot=TRUE)
+acf_eta_2 <- apply(eta_samples_2, 1, acf)
+
+for (i in 1:I) {
+  plot(acf_alpha_1[[i]], main = paste("Autocorrelation of a", i, " (Parametrization i)"))
+}
+for (i in 1:I) {
+  plot(acf_eta_2[[i]], main = paste("Autocorrelation of eta", i, " (Parametrization ii)"))
+}
+cross_corr_1=c(rep(0,I))
+cross_corr_2=c(rep(0,I))
+for(j in 1:I)
+  {cross_corr_1[j] <- cor(mu_samples_1, alpha_samples_1[j,])
+  cross_corr_2[j] <- cor(mu_samples_2, eta_samples_2[j,])}
+
+# Plot cross-correlations
+par(mfrow = c(1, 2))
+plot(cross_corr_1,type='l', main = "Cross-Correlations (Parametrization i)")
+plot(cross_corr_2, type='l',main = "Cross-Correlations (Parametrization ii)")
+
+
+for(i in 1:I)
+  {plot(mu_samples_1,alpha_samples_1[i,])
+  plot(mu_samples_2,eta_samples_2[i,])}
+```
+# According to the plots, the parametrization (i) performs better.
+
+## Problem 2.1
+```{r,echo=FALSE}
+require(LearnBayes)
+data=read.csv("/Users/liangdameinv/Desktop/525/crimecsv.csv")
+library(MCMCpack)
+# Least squares estimates
+ls_fit <- lm(y ~ ., data = data)
+summary(ls_fit)
+
+#Fit a regression model using the g-prior
+y = data$y
+n = length(y)
+g=n
+x = as.matrix(cbind(rep(1,n), data[,2:16]))
+Vb = solve(t(x) %*% x) 
+b0 = rep(0, 16)
+betahat = (g/(g+1))*(b0/g+Vb %*% t(x) %*% y)
+I=diag(x=1,nrow=n,ncol=n)
+s2 = t(y)%*%(I-(g/(g+1))+x%*%Vb%*%t(x))%*%y
+T = 10000
+k = ncol(x)
+sigma2 = rep(NA, T)
+beta = matrix(NA, T, k)
+for (t in 1:T){
+  sigma2[t] = rinvgamma(1, (2+n)/2, (1/2)*(2+s2))
+  beta[t,] = rmnorm(1, betahat, (g/(g+1))*sigma2[t] * Vb)
+}
+  # Posterior summary statistics: mean and 95% credible interval
+cat("Posterior mean of beta:", apply(beta, 2, mean))
+cat("Quantiles for beta:") 
+    apply(beta, 2, quantile, c(0.025, 0.5, 0.975))
+cat("Quantiles for sigma2:", quantile(sigma2, c(0.025, 0.5, 0.975)))
+
+```
+# From the results, five variables 'M', 'Ed', 'U2', 'Ineq' and 'Prob' have significant effect on crime rate.' M', 'Ed', 'U2', 'Ineq' are positively correlated with crime rate and 'Prob' is negatively correlated with crime rate.
+# According to the result, the 'M','Ed','U2','Ineq' and 'Prob' seem strongly predictive of crime rates.
+
+# Problem 2.2(i)
+```{r,echo=FALSE}
+data=read.csv("/Users/liangdameinv/Desktop/525/crimecsv.csv")
+y = data$y
+n = length(y)
+x = as.matrix(cbind(rep(1,n), data[,2:16]))
+library(caTools)
+set.seed(123)
+splitRatio = 0.7
+split = sample.split(data, SplitRatio = splitRatio)
+training_data = subset(data, split == TRUE)
+testing_data = subset(data, split == FALSE)
+ols_train=lm(y~.,data=training_data)
+x_training=as.matrix(cbind(rep(1,nrow(training_data)), training_data[,2:16]))
+yhat=x_training%*%ols_train$coefficients
+y_true=training_data$y
+plot(yhat,y_true,main="test data vs true data ")
+prediction_error=(1/n)*sum((y_true-yhat)^2)
+cat("Prediction error is:", prediction_error)
+```
+
+# Problem 2.2(ii)
+```{r,echo=FALSE}
+x_testing = as.matrix(cbind(rep(1,nrow(testing_data)), testing_data[,2:16]))
+y = training_data$y
+n = length(y)
+g=n
+x_training = as.matrix(cbind(rep(1,n), training_data[,2:16]))
+Vb = solve(t(x_training) %*% x_training) 
+b0 = rep(0, 16)
+betahat = (g/(g+1))*(b0/g+Vb %*% t(x_training) %*% y)
+I=diag(x=1,nrow=n,ncol=n)
+s2 = t(y)%*%(I-(g/(g+1))+x_training%*%Vb%*%t(x_training))%*%y
+T = 10000
+k= ncol(x_training)
+sigma2 = rep(NA, T)
+beta = matrix(NA, T,k)
+for (t in 1:T){
+  sigma2[t] = rinvgamma(1, (2+n)/2, (1/2)*(2+s2))
+  beta[t,] = rmnorm(1, betahat, (g/(g+1))*sigma2[t] * Vb)
+}
+expected_beta=apply(beta, 2, mean)
+yhat_test=x_testing%*%expected_beta
+plot(yhat_test,testing_data$y,main="test data vs true data ")
+prediction_error_bayes=(1/n)*sum((testing_data$y-yhat_test)^2)
+cat("Prediction error is:", prediction_error_bayes)
+```
+# The prediction error is less than OLS method.
+
+# Problem 2.3
+```{r,echo=FALSE}
+set.seed(123)
+num_splits =100
+train_test_splits = list()
+for (i in 1:num_splits) {
+  index = sample(1:nrow(data), size = 0.7 * nrow(data))  
+  train_data = data[index, ]
+  test_data =data[-index, ]
+
+  split_name = paste("Split", i)
+  train_test_splits[[split_name]] = list(train = train_data, test = test_data)
+}
+#OLS
+# Set the number of runs
+yhat=matrix(0,nrow=32,ncol=100)
+ols_train=matrix(0,nrow=16,ncol=100)
+prediction_error=numeric(num_splits)
+for (i in 1:num_splits) {
+  split_name = paste("Split", i)
+  training_data=train_test_splits[[split_name]][[1]]
+  ols_train[,i]=lm(y~.,data=training_data)[[1]]
+  x_training=as.matrix(cbind(rep(1,nrow(training_data)), training_data[,2:16]))
+yhat[,i]=x_training%*%ols_train[,i]
+y_true=training_data$y
+prediction_error[i]=(1/n)*sum((y_true-yhat[,i])^2)
+}
+
+#bayesian
+yhat_test=matrix(0,nrow=15,ncol=100)
+prediction_error_bayes=numeric(num_splits)
+betahat=matrix(0,nrow=16,ncol=100)
+for (i in 1:num_splits) {
+  split_name = paste("Split", i)
+  training_data=train_test_splits[[split_name]][[1]]
+  testing_data=train_test_splits[[split_name]][[2]]
+ x_testing = as.matrix(cbind(rep(1,nrow(testing_data)), testing_data[,2:16]))
+y = training_data[,1]
+n = length(y)
+g=n
+x_training = as.matrix(cbind(rep(1,n), training_data[,2:16]))
+Vb = solve(t(x_training) %*% x_training) 
+b0 = rep(0, 16)
+betahat[,i] = (g/(g+1))*(b0/g+Vb %*% t(x_training) %*% y)
+I=diag(x=1,nrow=n,ncol=n)
+s2 = t(y)%*%(I-(g/(g+1))+x_training%*%Vb%*%t(x_training))%*%y
+if(s2>0){
+T = 10000
+k= ncol(x_training)
+sigma2 = rep(NA, T)
+beta = matrix(NA, T,k)
+for (t in 1:T){
+  sigma2[t] = rinvgamma(1, (2+n)/2, (1/2)*(2+s2))
+  beta[t,] = rmnorm(1, betahat[,i], (g/(g+1))*sigma2[t] * Vb)
+}
+expected_beta=apply(beta, 2, mean)
+yhat_test[,i]=x_testing%*%expected_beta
+prediction_error_bayes[i]=(1/n)*sum((testing_data$y-yhat_test[,i])^2)
+}
+}
+# Print the results
+cat("Average OLS Prediction Error:", mean(prediction_error), "\n")
+cat("Average Bayesian Prediction Error:", mean(prediction_error_bayes), "\n")
+```
+# According to the results, the Bayesian Prediction Error is larger than oLS Prediction Error, which means the Bayesian method is less reasonable for this data.
+
+Problem 3.1
+```{r,echo=FALSE}
+library(ggplot2)
+data=read.csv("/Users/liangdameinv/Desktop/525/pdensitycsv.csv")
+# Fit OLS models for each group and store the parameter estimates
+group_estimates = list()
+residuals <- list()
+data[,2]=as.numeric(data[,2])
+num_groups=10
+for (i in 1:num_groups) {
+  group_data<- subset(data,plot==i)
+  ols_model <- lm(yield ~ density + I(density^2), data = group_data)
+  group_estimates[[i]] <- coef(ols_model)
+  residuals[[i]] <- residuals(ols_model)}
+
+
+group_estimates
+ggplot(data = data, aes(x = density, y = yield, color = as.factor(data[,1]))) +
+  geom_point()+
+  geom_smooth(method = "glm", formula=y ~ x+x^2)+
+  labs(title = "Heterogeneity of Least Squares Regression Lines",
+       x = "Planting Density (x)",
+       y = "Yield (y)",
+       color = "Group") +
+  theme_minimal()
+
+beta1=c(rep(0,10))
+  beta2=c(rep(0,10))
+  beta3=c(rep(0,10))
+  for(i in 1:10)
+  {beta1[i]=group_estimates[[i]][1]
+    beta2[i]=group_estimates[[i]][2]
+    beta3[i]=group_estimates[[i]][3]}
+
+beta_data <- data.frame(beta1, beta2, beta3)
+between_group_cov <- cov(beta_data)
+between_group_cov
+residualshat <- unlist(residuals)
+sigmahat_squared <- var(residualshat) 
+cat("Estimate of sigma square:",sigmahat_squared, "\n")
+```
+
+Problem 3.2
+```{r,echo=FALSE}
+library(LearnBayes)
+library(MCMCpack)
+x=as.numeric(data[,2])
+data=read.csv("/Users/liangdameinv/Desktop/525/pdensitycsv.csv")
+
+theta_hat=cbind(beta1,beta2,beta3)
+data[,2]=as.numeric(data[,2])
+
+# Starting points
+theta = c(mean(beta1),mean(beta2),mean(beta3))
+s2hat <- sigmahat_squared
+BETAhat <- theta_hat
+iSigmahat=solve(cov(BETAhat))
+Sigmahat=cov(BETAhat)
+bayesian_beta=function(j){
+# sample s2
+s2 <- 1/rgamma(1, sigmahat_squared);  
+ # Update Sigma
+iSigma <- matrix(rWishart( 1,4, iSigmahat),3,3); 
+# Update theta
+theta <- t(rmnorm(1, BETAhat[j,], Sigmahat));
+# Update beta_j 
+    X=subset(data,plot==j)[2]
+    X=as.matrix(as.numeric(unlist(X)))
+    Y=subset(data,plot==j)[3]
+    Y=as.matrix(Y)
+    V <- solve(iSigma + matrix(t(X)%*%X/s2,nrow=3,ncol=3));
+    E <- V%*%(iSigma%*%theta + matrix(t(X)%*%Y,nrow=3,ncol=1)/s2);
+    BETA <- rmnorm(1, E, V);
+    return(BETA)
+  }
+for(j in 1:10) 
+  print(bayesian_beta(j))
+
+```
+
+Problem 3.3
+```{r, echo=FALSE}
+data=read.csv("/Users/liangdameinv/Desktop/525/pdensitycsv.csv")
+# Load the required libraries
+n_iterations <- 5000
+burn_in <- 1000
+BETA1=matrix(0,n_iterations,3)
+gibbs=function(j){
+  for(t in 1:n_iterations)
+   {BETA1[t,]= bayesian_beta(j)
+    return(colMeans(BETA1))
+  }}
+expected_beta=matrix(0,10,3)
+for(j in 1:10)
+  expected_beta[j,]=gibbs(j)
+
+predicted_y = function(j){
+    X=subset(data,plot==j)[2]
+    X=as.matrix(as.numeric(unlist(X)))
+  return(gibbs(j)[1] + gibbs(j)[2] * X+gibbs(j)[3] * X^2)
+}
+custom_curve_data <- data.frame(
+  x = data$density, 
+  y = rbind(predicted_y(1),predicted_y(2),predicted_y(3),predicted_y(4),predicted_y(5),predicted_y(6),predicted_y(7),predicted_y(8),predicted_y(9),predicted_y(10)),
+  group = rep(c("Group 1", "Group 2", "Group 3","Group 4","Group 5","Group 6","Group 7","Group 8","Group 9","Group 10"), each = 8) 
+)
+
+ggplot(custom_curve_data, aes(x = x, y = y, color = group)) +
+  geom_line(size = 1, linetype = "solid") +
+  labs(
+    title = "resulting regression lines",
+    x = "density",
+    y = "predicted y"
+  ) +
+  theme_minimal()
+
+```
+# By comparing the two plots, the bayesian method considers the prior distributions which is more reasonable and realistic. Besides, the bayesian does not build regression model based on the data, so there are some differeces between the two plots.
+
+Problem 3.4
+```{r,echo=FALSE}
+data=read.csv("/Users/liangdameinv/Desktop/525/pdensitycsv.csv")
+iSigmahat=solve(cov(BETAhat))
+Sigmahat=cov(BETAhat)
+posterior_samples_theta=function(j) {
+  iSigma=matrix(rWishart( 1,4, iSigmahat),3,3)
+  vu=solve(iSigmahat+3*iSigma)
+  mu=vu%*%(iSigmahat%*%BETAhat[j,]+iSigma%*%apply(BETAhat, 2, sum))
+    return(rmnorm(1,mu,vu))
+}
+
+prior_samples_theta = function(j)
+{return(rmnorm(1, BETAhat[j,], Sigmahat))}
+
+  theta=rbind(posterior_samples_theta(1),posterior_samples_theta(2),posterior_samples_theta(3),posterior_samples_theta(4),posterior_samples_theta(5),posterior_samples_theta(6),posterior_samples_theta(7),posterior_samples_theta(8),posterior_samples_theta(9),posterior_samples_theta(10))
+  Sigma_elements = riwish( 4, solve(iSigmahat + t(BETAhat - 3*theta)%*%(BETAhat -3*theta)))
+
+prior_theta=rbind(prior_samples_theta(1),prior_samples_theta(2),prior_samples_theta(3),prior_samples_theta(4),prior_samples_theta(5),prior_samples_theta(6),prior_samples_theta(7),prior_samples_theta(8),prior_samples_theta(9),prior_samples_theta(10))
+  
+posterior_df <- data.frame(Parameter = "theta", Value =theta , DensityType = "Posterior")
+
+prior_df <- data.frame(Parameter = "theta", Value = prior_theta , DensityType = "Prior")
+
+combined_df <- rbind(posterior_df, prior_df)
+#beta1
+ggplot(combined_df, aes(x = Value.beta1, fill = DensityType)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Marginal Posterior and Prior Densities of theta1",
+       x = "Value",
+       y = "Density") +
+  theme_minimal()
+#beta2
+ggplot(combined_df, aes(x = Value.beta2, fill = DensityType)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Marginal Posterior and Prior Densities of theta2",
+       x = "Value",
+       y = "Density") +
+  theme_minimal()
+#beta3
+ggplot(combined_df, aes(x = Value.beta3, fill = DensityType)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Marginal Posterior and Prior Densities of theta3",
+       x = "Value",
+       y = "Density") +
+  theme_minimal()
+
+element_names <- c("sigma[1,1]", "sigma[1,2]", "sigma[1,3]", "sigma[2,1]", "sigma[2,2]", "sigma[2,3]", "sigma[3,1]", "sigma[3,2]", "sigma[3,3]")
+Sigma_df <- data.frame(Parameter = element_names, Value = as.vector(Sigma_elements), DensityType = "Posterior")
+ggplot(Sigma_df,  aes(x = Value)) +
+  geom_density(alpha = 0.5)+
+  labs(title = "Marginal Posterior Densities of Sigma Elements",
+       x = "Value",
+       y = "Density") +
+  theme_minimal()
+```
+# As we can be seen from the figure, the intercepts and slopes derived from the posterior probabilities have a large variance, which indicates that the different groups obey different normal distributions from one another.
+
+Problem 3.5
+```{r,echo=FALSE}
+data=read.csv("/Users/liangdameinv/Desktop/525/pdensitycsv.csv")
+x_range <- seq(2, 8, by = 0.1)  # Replace with your desired rang
+predictedy=list()
+predictive_intervals=matrix(0,nrow=10,ncol=2)
+ba=matrix(0,10,3)
+for(i in 1:10)
+  {ba[i,]=bayesian_beta(i)
+  predictedy[[i]]=ba[i,1]+ba[i,2]*x_range+ba[i,3]*x_range
+  predictive_intervals[i, ] <- quantile(predictedy[[i]], c(0.025, 0.975))
+  print(max(predictedy[[i]]))
+  print(predictive_intervals[i,])}
+a=which.max(predictive_intervals)
+expected_y_max=predictive_intervals[a]
+xmax=x_range[which(predictedy[[a/2]]==max(predictedy[[a/2]]))]
+cat("The planting density that maximizes expected yield is:", xmax, "\n")
+
+```
+
+
