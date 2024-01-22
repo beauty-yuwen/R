@@ -1,0 +1,254 @@
+---
+title: "mcmc for tokyo rainfall data"
+output: pdf_document
+date: "2023-11-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 
+
+```{r}
+library(gamlss.data)
+library(spdep)
+library(boot)
+library(ggplot2)
+library(gridExtra)
+library(MCMCpack)
+library(mvtnorm)
+
+y1=which(trd==1)
+y2=which(trd==2)
+data=matrix(0,nrow=366,ncol=2)
+data[y1,1]=1
+data[y2,2]=1
+n=366
+data
+plot(data[,1],ylab="whether it rains",main="Data description")
+write.csv(data[,1],file="rainfall.csv")
+# data is drawn from Bernoulli: Yday,yr ∼ Bernoulli(pday).
+# yts are all Bernoulli(pt) pday = logit−1(thetaday )
+# thetaday is latent variable
+# latent field (GMRF) thetaday|ka ~N(0,Q(ka))
+# assume: ka~ Gamma(1, 0.0001) 
+library(spam)
+Q<-precmat.RW2(n)# precision matric is RW2 (assumed)
+
+likelihood_vector=c(rep(0,1000))
+y_prior=matrix(0,ncol=366,nrow=1000)
+theta=matrix(0,ncol=366,nrow=1000)
+k=c(rep(0,1000))
+p=matrix(0,ncol=366,nrow=1000)
+joint_posterior=matrix(0,ncol=366,nrow=1000)
+p_posterior=matrix(0,ncol=366,nrow=1000)
+k_post=c(rep(0,1000))
+new_theta=matrix(0,ncol=366,nrow=1000)
+theta_post=matrix(0,ncol=366,nrow=1000)
+for(i in 2:1000)
+  {
+  k[i]<-rgamma(1,1,0.0001)
+  epsilon <- 1e-1
+  theta[i,]<-mvrnorm(1,rep(0,366),k[i]*Q)
+  p[i,]<-inv.logit(theta[i,])
+smoothed_prob <- pmin(p[i,], 1 - epsilon)
+smoothed_prob <- pmax(smoothed_prob, epsilon)
+likelihood_vector[i] = sum(dbinom(data[, 1], size = 1, prob = smoothed_prob, log = TRUE))
+joint_posterior[i,]=dbinom(data[, 1], size = 1, prob = smoothed_prob, log = TRUE)+dgamma(k[i],1,0.0001,log = TRUE)+log(density(theta[i,],n=366)$y)
+k_post[i]=rgamma(1,1,0.0001)
+theta_post[i,]=dbinom(data[, 1], size = 1, prob = smoothed_prob, log = TRUE)+dgamma(k_post[i], 1, 0.0001,log=TRUE)
+k[1]=rgamma(1,1,0.0001)
+  #Log-acceptance probability
+  acc.prob1 <- sum(k[i]-k_post[i])
+  acc.prob2=sum(theta[i,]-theta_post[i,])
+  acc.prob1 <- min(1, exp(acc.prob1))
+  acc.prob2=min(1, exp(acc.prob2))
+  # Accept/reject new value  
+  if(runif(1) < acc.prob1) {
+    k[i] <- k_post[i]
+  } else {
+    k[i] <- k[i-1]
+  }
+if(runif(1)<acc.prob2){
+  theta[i,]=theta_post[i,]
+}
+  else{
+    theta[i,]=theta[i-1,]
+  }
+}
+
+k2 <- k[seq(101, 1000, by = 5)]
+theta_result=theta[seq(101, 1000, by = 5),]
+k2_posterior=k2
+theta2_posterior=colMeans(theta_result)
+
+# Density plot of theta distribution
+dens.k <- as.data.frame(density(k2_posterior, bw = 0.4)[c("x", "y")])
+p1_post_k <- ggplot(dens.k, aes(x = x, y = y)) + geom_line() +
+  xlab(expression(k)) +
+  ylab(expression(paste(pi, "(", k2_posterior, " | ", bold(y), ")"))) +
+  #ylab("density") +
+  ggtitle("Posterior density")
+
+dens.theta=as.data.frame(density(theta2_posterior, bw = 0.4)[c("x", "y")])
+p2_post_theta <- ggplot(dens.theta, aes(x = x, y = y)) + geom_line() +
+  xlab(expression(theta)) +
+  ylab(expression(paste(pi, "(", theta2_posterior, " | ", bold(y), ")"))) +
+  #ylab("density") +
+  ggtitle("Posterior density")
+
+grid.arrange(p1_post_k, p2_post_theta, ncol = 1)
+# plots of prior distributions and likelihood function
+tab1 <- data.frame(k, seq(1,1000,by=1))
+p1_prior_plot <- ggplot(tab1, aes(k) )+ geom_density() +
+  ggtitle("Prior distribution of k") +
+  xlab(expression(k[1,])) + ylab("density")
+
+
+tab2 <- data.frame(theta,likelihood_vector)
+p2_lik_plot <- ggplot(tab2, aes(likelihood_vector)) + geom_density() +
+  ggtitle("Likelihood") 
+
+df <- as.data.frame(theta)
+p3_prior_plot=ggplot(df, aes(x =V1, y = V2)) +
+  geom_density_2d() +
+  theme_minimal() +
+  labs(title = "Multivariate Normal Distribution Density Plot (2D Projection)",
+       x = "Variable 1", y = "Variable 2")
+
+grid.arrange(p1_prior_plot, p2_lik_plot,p3_prior_plot, ncol = 1)
+
+
+
+likelihood_vector1=c(rep(0,1000))
+y_prior1=matrix(0,ncol=366,nrow=1000)
+theta1=matrix(0,ncol=366,nrow=1000)
+k1=c(rep(0,1000))
+p1=matrix(0,ncol=366,nrow=1000)
+joint_posterior1=matrix(0,ncol=366,nrow=1000)
+p_posterior1=matrix(0,ncol=366,nrow=1000)
+k_post1=c(rep(0,1000))
+theta_post1=matrix(0,ncol=366,nrow=1000)
+for(i in 2:1000)
+  {k1[1]=rgamma(1,1,0.0001)
+  k1[i]<-rgamma(1,1,0.0001)
+  epsilon <- 1e-1
+  theta1[i,]<-mvrnorm(1,rep(0,366),k1[i]*Q)
+  log(density(theta1[i,],n=366)$y)
+  p1[i,]<-inv.logit(theta1[i,])
+smoothed_prob <- pmin(p1[i,], 1 - epsilon)
+smoothed_prob <- pmax(smoothed_prob, epsilon)
+likelihood_vector1[i] = sum(dbinom(data[, 1], size = 1, prob = smoothed_prob, log = TRUE))
+joint_posterior1[i,]=dbinom(data[, 1], size = 1, prob = smoothed_prob, log = TRUE)+dgamma(k1[i],1,0.0001,log = TRUE)+log(density(theta1[i,],n=366)$y)
+k_post1[i]=rgamma(1,1,0.0001)
+theta_post1[i,]=dbinom(data[, 1], size = 1, prob = smoothed_prob, log = TRUE)+dgamma(k_post1[i], 1, 0.0001,log=TRUE)
+  #Log-acceptance probability
+  acc.prob1 <- sum(k1[i]-k_post1[i])
+  acc.prob2=sum(theta1[i,]-theta_post1[i,])
+  acc.prob1 <- min(1, exp(acc.prob1))
+  acc.prob2=min(1, exp(acc.prob2))
+  # Accept/reject new value  
+  if(runif(1) < acc.prob1) {
+    k1[i] <- k_post1[i]
+  } else {
+    k1[i] <- k1[i-1]
+  }
+if(runif(1)<acc.prob2){
+  theta1[i,]=theta_post1[i,]
+}
+  else{
+    theta1[i,]=theta1[i-1,]
+  }
+}
+
+k3 <- k1[seq(101, 1000, by = 5)]
+theta_result1=theta1[seq(101, 1000, by = 5),]
+k2_posterior=k3
+theta2_posterior=colMeans(theta_result1)
+
+library(coda)
+
+mcmc_result1_theta <- as.mcmc(t(theta_result))
+mcmc_result2_theta=mcmc(t(theta_result1))
+
+mcmc_result1_k <- mcmc(k2)
+mcmc_result2_k=mcmc(k3)
+
+# Use gelman.diag for diagnostics
+gelman_diag_result_theta <- gelman.diag(list(mcmc_result1_theta,mcmc_result2_theta),confidence = 0.95)
+gelman_diag_result_theta$psrf# values significantly larger than 1 may indicate lack of convergence.
+gelman_diag_result_k <- gelman.diag(list(mcmc_result1_k,mcmc_result2_k),confidence = 0.95)
+gelman_diag_result_k$psrf# values significantly larger than 1 may indicate lack of convergence.
+gelman.plot(list(mcmc_result1_k,mcmc_result2_k),
+confidence = 0.95,autoburnin=TRUE, auto.layout = TRUE)#In a well-converged scenario, you would see the lines for each parameter stabilizing around 1 as the number of iterations increases. 
+
+
+```
+
+## INLA In this section we present the INLA approach for approximating the posterior marginals of the latent Gaussian field, π.xi\|y/, i=1, . . . , n.
+
+There are three steps to do the INLA. (a) $$\stackrel{\sim}{\pi}({\theta}{\mid}{y}){\varpropto}{\frac{\pi(x,\theta,y)}{\stackrel{\sim}{\pi}_{G}(x{\mid}\theta,y)}}\mid_{x=x^{\ast}(\theta)}$$
+(b) The second step computes the Laplace approximation, or the simplified Laplace approximation, of π.xi\|y, θ/, for selected values of θ, to improve on the Gaussian approximation. $$\stackrel{\sim}{\pi}(x_{i}{\mid}{\theta},y)=N\{x_{i};\mu_{i}(\theta),{\sigma_{i}}^2(\theta)\}$$ (c)The third step combines the previous two by using numerical integration. $$\stackrel{\sim}{\pi}(x_{i}{\mid}y)={{\Sigma}_k}{\stackrel{\sim}{\pi}(x_{i}{\mid}{\theta_k},y)}{\stackrel{\sim}{\pi}({\theta_k}{\mid}y})\triangle_k$$
+
+```{r}
+# data is drawn from Bernoulli: Yday,yr ∼ Bernoulli(pday).
+# yts are all Bernoulli(pt) pday = logit−1(thetaday )
+# thetaday is latent variable
+# latent field (GMRF) thetaday|ka ~N(0,Q(ka))
+# assume: ka~ Gamma(1, 0.0001) 
+#optimizing log{ ˜π.θ|y/} with respect to θ
+
+# so E(yt)=pt g(pt)=logit(pt)=etat pt=e^etat/1+e^etat etat is a function of mu
+# additive poredictor is simple: etat=f(thetat)=thetat
+#one hyperparameter κ ∼ Gamma(1, 0.0001)
+#and our normal specification on the parameters: θ|κ ∼ N (0, κQ)
+# when given a theta
+#Laplace approximations are only applied to densities that are near-Gaussian, replacing complex dependencies with conditioning
+#Our goal is to accurately approximate the posterior marginals  p(ηi∣y)for  i=1,…,n and  p(θj∣y)for  j=1,2. here ηi is our theta1,theta2...theta366; thetaj is k
+# irstly propose an approximation  ~p(θ∣y)to the joint posterior of  p(θ∣y), secondly propose an approximation~p(ηi∣θ,y)to the marginals of the conditional distribution of  ηigiven the data and the hyperparameters  p(ηi∣θ,y), and finally explore  ~p(θ∣y)and use it for numerical integration.
+
+k_inla=rgamma(1,1,0.0001)
+theta_inla=mvrnorm(1,rep.int(0, dim(k_inla*Q)[1]),k_inla*Q)
+epsilon <- 1e-1
+p_inla<-inv.logit(theta_inla)
+smoothed_prob <- pmin(p_inla, 1 - epsilon)
+smoothed_prob <- pmax(smoothed_prob, epsilon)
+likihood_fun_inla=dbinom(data[, 1], size = 1, prob = smoothed_prob, log = TRUE)
+joint_posterior_inla=dbinom(data[, 1], size = 1, prob = smoothed_prob, log = TRUE)+dgamma(k_inla,1,0.0001,log = TRUE)+log(density(theta_inla,n=366)$y)
+log_likelihood=function(theta){
+  epsilon <- 1e-1
+p_inla<-inv.logit(theta_inla)
+smoothed_prob <- pmin(p_inla, 1 - epsilon)
+smoothed_prob <- pmax(smoothed_prob, epsilon)
+return(dbinom(data[, 1], size = 1, prob = smoothed_prob, log = TRUE))
+}
+f <- function(x) dbinom(data[, 1], size = 1, prob = x, log = TRUE)
+
+# Calculate the second derivative
+library(Deriv)
+second_derivative <- Deriv(f, x=Mode(p_inla), nderiv  = 2)
+  
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+eta_mode <- Mode(log(density(theta_inla,n=366)$y))
+
+R=Q
+library(Matrix)
+jitter_value <- 1e-6
+diag(Q) <- diag(Q) + jitter_value
+chol_factor <- det(Q)
+gaussian_k=chol_factor^(1/2)*exp((-1/2)*t(theta_inla-eta_mode)%*%R%*%(theta_inla-eta_mode))
+k_post_inla=joint_posterior_inla/gaussian_k
+
+theta_fun_inla=log(density(theta_inla,n=366)$y)
+k_fun_inla=dgamma(k_inla,1,0.0001,log = TRUE)
+theta_k_y_fun=exp((-1/2)*t(theta_inla)%*%(k_inla*Q)%*%theta_inla+likihood_fun_inla)
+approximation_theta=(Q+diag(c))*exp(-1/2*t(theta_inla-given_theta)*(Q+diag(c))*(theta_inla-given_theta))
+#how to asscertain given theta( when the liklihood function is max, the theta is given theta)
+for(given_theta in theta_inla)
+  if(log(exp(-1/2*t(theta-0)*(k*theta+diag(c))*(theta-0)))-log(exp(-1/2*t(theta-given_theta)*(k*theta+diag(c))*(theta-given_theta)))<2.5)
+    k_true=k
+```   
