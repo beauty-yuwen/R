@@ -1,0 +1,204 @@
+---
+title: "525 HW2"
+output: pdf_document
+date: "2023-09-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## exercise 3.3 a
+
+```{r}
+shape_thetaA=237
+rate_thetaA=20
+thetaA_lower=qgamma(0.025, shape = shape_thetaA, rate = rate_thetaA)
+thetaA_upper=qgamma(0.975, shape = shape_thetaA, rate = rate_thetaA)
+cat("95% Confidence Interval for thetaB is:", '(',thetaA_lower,',',thetaA_upper,')', "\n")
+
+
+shape_thetaB=125
+rate_thetaB=14
+thetaB_lower=qgamma(0.025, shape = shape_thetaB, rate = rate_thetaB)
+thetaB_upper=qgamma(0.975, shape = shape_thetaB, rate = rate_thetaB)
+cat("95% Confidence Interval for thetaB is:", '(',thetaB_lower,',',thetaB_upper,')', "\n")
+```
+
+## exercise 3.3 b
+
+```{r}
+yB=c(11,11,10,9,9,8,7,10,6,8,8,9,7)
+yA=c(12,9,12,14,13,13,15,8,15,6)
+n0=seq(1,50,by=1)
+expectation_thetaB=rep(0,length(n0))
+for (i in 1:length(n0))
+{expectation_thetaB[i]=(12*n0[i]+sum(yB))/(n0[i]+length(yB))}
+plot(n0,expectation_thetaB,type='l')
+abline(h = mean(yA), col = "red", lty = 2)
+expectation_thetaB[50]<mean(yA)
+```
+
+# According to the plot, if n0 is between 1 and 50, every posterior expectation of thetaB under prior beliefs about thetaB is smaller than average of thetaA. When the posterior expectation is bigger, it is closer to thetaA.
+
+## exercise 4.2 a
+
+```{r}
+yB=c(11,11,10,9,9,8,7,10,6,8,8,9,7)
+yA=c(12,9,12,14,13,13,15,8,15,6)
+thetaA_yA=rgamma(10000,shape=120+sum(yA),rate=10+length(yA))
+thetaB_yB=rgamma(10000,shape=12+sum(yB),rate=1+length(yB))
+pro=length(which(thetaA_yA>thetaB_yB))/10000
+cat("Pr(thetaB < thetaA | yA, yB) =", pro, "\n")
+```
+
+```{r}
+#another method
+likelihood_yA=function(thetaA, yA) {
+  prod(dpois(yA, lambda = thetaA))
+}
+likelihood_yB=function(thetaB, yB) {
+  prod(dpois(yB, lambda = thetaB))
+}
+
+posterior=function(thetaA, thetaB, yA, yB) {
+  prior_thetaA = dgamma(thetaA, shape = 237, rate = 20)
+  prior_thetaB =dgamma(thetaB, shape = 125, rate = 14)
+  likelihood_A=likelihood_yA(thetaA, yA)
+  likelihood_B=likelihood_yB(thetaB, yB)
+    return(prior_thetaA * likelihood_A * prior_thetaB * likelihood_B)
+}
+
+num=10000
+samples_thetaA=rep(0,num) 
+samples_thetaB=rep(0,num)
+
+thetaA=10
+thetaB=5
+count=0
+for (i in 1:num) {
+  thetaA_proposal=rnorm(1, thetaA, 2)
+  thetaB_proposal=rnorm(1, thetaB, 2)
+  acceptance_ratio = posterior(thetaA_proposal, thetaB_proposal, yA, yB) /
+                      posterior(thetaA, thetaB, yA, yB)
+
+  if(!is.na(acceptance_ratio)){
+  if(runif(1) < acceptance_ratio) {
+    thetaA=thetaA_proposal
+    thetaB=thetaB_proposal
+  }}
+if (thetaB < thetaA) {
+    count = count + 1
+  }
+}
+
+probability = count / num
+cat("Pr(thetaB < thetaA | yA, yB) =", probability, "\n")
+```
+## exercise 4.2 b
+
+```{r}
+yB=c(11,11,10,9,9,8,7,10,6,8,8,9,7)
+yA=c(12,9,12,14,13,13,15,8,15,6)
+
+num=10000
+
+n0=seq(1,50,by=1)
+
+probabilities = matrix(nrow = length(n0), ncol = num)
+
+for (i in 1:length(n0)) {
+  n00 = n0[i]
+  for (j in 1:num) {
+    thetaA=rgamma(1, shape = 120, rate = 10)
+    thetaB=rgamma(1, shape = 12 * n00, rate = n00)
+    
+    probabilities[i, j] = as.numeric(thetaB < thetaA)
+  }
+}
+proportions = rowMeans(probabilities)
+
+plot(n0, proportions, 
+     xlab = "n0", ylab = "Pr(thetaB < thetaA | yA, yB)",
+     main = "Sensitivity to Prior Distribution on thetaB")
+```
+
+# According to the plot, when n0 is between 0 and 18, the probablity is sensitive to the prior distribution on thetaB, when n0 is between 18 and 50, it is not so sensitive to the thetaB's prior distribution.
+
+## exercise 4.2 c
+
+```{r}
+yA <- c(12, 9, 12, 14, 13, 13, 15, 8, 15, 6)
+yB <- c(11, 11, 10, 9, 9, 8, 7, 10, 6, 8, 8, 9, 7)
+
+num = 10000
+n0 =seq(1,50,by=1)
+
+probabilities <- matrix(nrow = length(n0), ncol = num)
+
+for (i in 1:length(n0)) {
+  n00 = n0[i]
+  
+  posterior_samples_A = rgamma(num, shape = 120 + sum(yA), rate = 10 + length(yA))
+  posterior_samples_B = rgamma(num, shape = 12 * n00 + sum(yB), rate = n00 + length(yB))
+  
+  for (j in 1:num) {
+    yA_distribution = rpois(1, lambda = posterior_samples_A[j])
+    yB_distribution = rpois(1, lambda = posterior_samples_B[j])
+    probabilities[i, j] = as.numeric(yB_distribution< yA_distribution)
+  }
+}
+
+proportions <- rowMeans(probabilities)
+
+plot(n0, proportions, 
+     xlab = "n0", ylab = "P(YB<YA|yA, yB)",
+     main = "Sensitivity to Prior Distribution on thetaB (Posterior Predictive)")
+```
+
+# According to the plot, it is decreasing with the increasing n0. So, the probablity is sensitive to the thetaB's piror distribution.
+
+## exercise 4.3 a
+
+```{r}
+yA <- c(12, 9, 12, 14, 13, 13, 15, 8, 15, 6)
+num = 1000
+t_s = rep(0,num)
+posterior_samples_A =rep(0,num)
+for (i in 1:num) {
+  posterior_samples_A[i] = rgamma(1, shape = 120 + sum(yA), rate = 10 + length(yA))
+   yA_distribution = rpois(10, lambda = posterior_samples_A[i])
+   t_s[i]=mean(yA_distribution)/sd(yA_distribution)}
+observed_t_s=mean(yA)/sd(yA)
+
+hist(t_s, main = "Posterior Predictive Check for Poisson Model",
+     xlab = "Test Statistic (t(s))", ylab = "Frequency", col = "pink", border = "red")
+
+
+abline(v = observed_t_s, col = "black", lty = 2)
+legend("topright", legend = "Observed Statistic", col = "red", lty = 2)
+```
+
+# According to the histgram and comparing to the observed data, the Poisson model fits the data.  
+
+## exercise 4.3 b
+
+```{r}
+yB <- c(11, 11, 10, 9, 9, 8, 7, 10, 6, 8, 8, 9, 7)
+num = 1000
+t_s = rep(0,num)
+posterior_samples_B =rep(0,num)
+for (i in 1:num) {
+  posterior_samples_B[i] = rgamma(1, shape = 12 + sum(yB), rate = 1 + length(yB))
+   yB_distribution = rpois(10, lambda = posterior_samples_B[i])
+   t_s[i]=mean(yB_distribution)/sd(yB_distribution)}
+observed_t_s=mean(yB)/sd(yB)
+
+hist(t_s, main = "Posterior Predictive Check for Poisson Model of B",
+     xlab = "Test Statistic (t(s))", ylab = "Frequency", col = "pink", border = "red")
+
+abline(v = observed_t_s, col = "black", lty = 2)
+legend("topright", legend = "Observed Statistic", col = "red", lty = 2)
+```
+
+# According to the histgram and comparing to the observed data, the Poisson model does not fit the population B well. 
