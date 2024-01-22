@@ -1,0 +1,258 @@
+---
+title: "525 HW 3"
+output: pdf_document
+date: "2023-09-10"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## exercise 5.1(a)
+
+```{r}
+library(MCMCpack)
+#school1
+school1=c(2.11,9.75,13.88,11.3,8.93,15.66,16.38,4.54,8.86,11.94,12.47,11.11,11.65,14.53,9.61,7.38,3.34,9.06,9.45,5.98,7.44,8.5,1.55,11.45,9.73)
+n1=length(school1)
+xbar1=mean(school1)
+SS1=sum((school1-xbar1)^2)
+mu0_prior=5
+k0_prior=1
+v0_prior=2
+SS0_sq=4
+kn_posterior1=k0_prior + n1
+mu_posterior1=(k0_prior * mu0_prior+ n1 * xbar1) / kn_posterior1
+vn_posterior1=v0_prior + n1
+sigma_sq_posterior1=(SS1+SS0_sq*v0_prior+(k0_prior*n1/kn_posterior1)*((xbar1-mu0_prior)^2))/vn_posterior1
+sigma_samples1=sqrt(rinvgamma(10000,vn_posterior1/2, vn_posterior1*sigma_sq_posterior1/2))
+theta1=rnorm(10000, mu_posterior1, sigma_samples1/sqrt(kn_posterior1))
+theta_ci1=quantile(theta1, c(0.025, 0.975))
+sigma_ci1=quantile(sigma_samples1, c(0.025, 0.975))
+cat("Posterior Mean (Theta) of school1:", mean(theta1), "\n")
+cat("95% Credible Interval for Theta of school1:", theta_ci1, "\n")
+cat("Posterior Standard Deviation (Sigma):", mean(sigma_samples1), "\n")
+cat("95% Credible Interval for sigma of school1:", sigma_ci1, "\n")
+
+#school2
+school2=c(0.29,1.13,6.52,11.72,6.54,5.63,14.59,11.74,9.12,9.43,10.64,12.28,9.5,0.63,15.35,5.31,8.49,3.04,3.77,6.22,2.14,6.58,1.11)
+n2=length(school2)
+xbar2=mean(school2)
+SS2=sum((school2-xbar2)^2)
+kn_posterior2=k0_prior + n2
+mu_posterior2=(k0_prior * mu0_prior+ n2 * xbar2) / kn_posterior2
+vn_posterior2=v0_prior + n2
+sigma_sq_posterior2=(SS2+SS0_sq*v0_prior+(k0_prior*n2/kn_posterior2)*((xbar2-mu0_prior)^2))/vn_posterior2
+sigma_samples2=sqrt(rinvgamma(10000,vn_posterior2/2,vn_posterior2*sigma_sq_posterior2/2))
+theta2=rnorm(10000, mu_posterior2, sigma_samples2/sqrt(kn_posterior2))
+theta_ci2=quantile(theta2, c(0.025, 0.975))
+sigma_ci2=quantile(sigma_samples2, c(0.025, 0.975))
+cat("Posterior Mean (Theta) of school2:", mean(theta2), "\n")
+cat("95% Credible Interval for Theta of school2:", theta_ci2, "\n")
+cat("Posterior Standard Deviation (Sigma):", mean(sigma_samples2), "\n")
+cat("95% Credible Interval for sigma of school2:", sigma_ci2, "\n") 
+
+#school3
+school3=c(4.33,7.77,4.15,5.64,7.69,5.04,10.01,13.43,13.63,9.9,5.72,5.16,4.33,12.9,11.27,6.05
+,0.95,6.02,12.22,12.85)
+n3=length(school3)
+xbar3=mean(school3)
+SS3=sum((school3-xbar3)^2)
+kn_posterior3=k0_prior + n3
+mu_posterior3=(k0_prior * mu0_prior+ n3 * xbar3) / kn_posterior3
+vn_posterior3=v0_prior + n3
+sigma_sq_posterior3=(SS3+SS0_sq*v0_prior+(k0_prior*n2/kn_posterior3)*((xbar3-mu0_prior)^2))/vn_posterior3
+sigma_samples3=sqrt(rinvgamma(10000,vn_posterior3/2,vn_posterior3*sigma_sq_posterior3/2))
+theta3=rnorm(10000, mu_posterior3, sigma_samples3/sqrt(kn_posterior3))
+theta_ci3=quantile(theta3, c(0.025, 0.975))
+sigma_ci3=quantile(sigma_samples3, c(0.025, 0.975))
+cat("Posterior Mean (Theta) of school3:", mean(theta3), "\n")
+cat("95% Credible Interval for Theta of school3:", theta_ci3, "\n")
+cat("Posterior Standard Deviation (Sigma):", mean(sigma_samples3), "\n")
+cat("95% Credible Interval for sigma of school3:", sigma_ci3, "\n") 
+
+```
+
+## exercise 5.1(b)
+
+```{r}
+
+compute_posterior_probability_theta = function(samples_i, samples_j, samples_k) {
+  i_less_j_less_k = 0
+  for(i in 1:10000){
+        if (samples_i[i] < samples_j[i] && samples_j[i] < samples_k[i]) {
+          i_less_j_less_k = i_less_j_less_k + 1
+        }
+  }
+  
+posterior_probability = i_less_j_less_k / length(samples_i) 
+  return(posterior_probability)
+}
+
+ijk = compute_posterior_probability_theta(theta1, theta2, theta3)
+ikj = compute_posterior_probability_theta(theta1, theta3, theta2)
+jik = compute_posterior_probability_theta(theta2, theta1, theta3)
+jki = compute_posterior_probability_theta(theta2, theta3, theta1)
+kij = compute_posterior_probability_theta(theta3, theta1, theta2)
+kji = compute_posterior_probability_theta(theta3, theta2, theta1)
+
+cat("Posterior Probability theta1 < theta2 < theta3:", ijk, "\n")
+cat("Posterior Probability theta1 < theta3 < theta2:", ikj, "\n")
+cat("Posterior Probability theta2 < theta1 < theta3:", jik, "\n")
+cat("Posterior Probability theta2 < theta3 < theta1:", jki, "\n")
+cat("Posterior Probability theta3 < theta1 < theta2:", kij, "\n")
+cat("Posterior Probability theta3 < theta2 < theta1:", kji, "\n")
+
+```
+
+## exercise 5.1(c)
+
+```{r}
+
+Y11=rt(10000,vn_posterior1)*sigma_samples1/sqrt(kn_posterior1)*sqrt(kn_posterior1+1)+mu_posterior1
+
+Y22=rt(10000,vn_posterior2)*sigma_samples2/sqrt(kn_posterior2)*sqrt(kn_posterior2+1)+mu_posterior2
+
+Y33=rt(10000,vn_posterior3)*sigma_samples3/sqrt(kn_posterior3)*sqrt(kn_posterior3+1)+mu_posterior3
+compute_posterior_probability_Y = function(samples_i, samples_j, samples_k) {
+  i_less_j_less_k = 0
+  for(i in 1:10000){
+        if (samples_i[i] < samples_j[i] && samples_j[i] < samples_k[i]) {
+          i_less_j_less_k = i_less_j_less_k + 1
+        }
+  }
+  
+posterior_probability = i_less_j_less_k / length(samples_i) 
+  return(posterior_probability)
+}
+
+
+ijk1 = compute_posterior_probability_Y(Y11, Y22, Y33)
+ikj1 = compute_posterior_probability_Y(Y11, Y33, Y22)
+jik1 = compute_posterior_probability_Y(Y22, Y11, Y33)
+jki1 = compute_posterior_probability_Y(Y22, Y33, Y11)
+kij1 = compute_posterior_probability_Y(Y33, Y11, Y22)
+kji1 = compute_posterior_probability_Y(Y33, Y22, Y11)
+
+
+cat("Posterior Probability Y1 < Y2 < Y3:", ijk1, "\n")
+cat("Posterior Probability Y1 < Y3 < Y2:", ikj1, "\n")
+cat("Posterior Probability Y2 < Y1 < Y3:", jik1, "\n")
+cat("Posterior Probability Y2 < Y3 < Y1:", jki1, "\n")
+cat("Posterior Probability Y3 < Y1 < Y2:", kij1, "\n")
+cat("Posterior Probability Y3 < Y2 < Y1:", kji1, "\n")
+```
+
+## exercise 5.1(d)
+
+```{r}
+  theta1_bigger_theta2_and_theta1_bigger_theta3 = 0
+    for(i in 1:10000){
+        if (theta1[i] > theta2[i] && theta1[i] > theta3[i]) {
+           theta1_bigger_theta2_and_theta1_bigger_theta3 =  theta1_bigger_theta2_and_theta1_bigger_theta3 + 1
+        }
+  }
+theta_posterior_probability =  theta1_bigger_theta2_and_theta1_bigger_theta3 / length(theta1) 
+  Y1_bigger_Y2_and_Y1_bigger_Y3=0
+  for(i in 1:10000){
+        if (Y11[i] >Y22 [i] && Y11[i] > Y33[i]) {
+          Y1_bigger_Y2_and_Y1_bigger_Y3 =Y1_bigger_Y2_and_Y1_bigger_Y3 + 1
+        }
+  }
+  
+Y_posterior_probability = Y1_bigger_Y2_and_Y1_bigger_Y3 / length(Y11) 
+ 
+cat("Posterior Probability Y1 > Y2 and Y1 > Y3:",Y_posterior_probability, "\n")
+cat("Posterior Probability theta1 > theta2 and theta1 > theta3:", theta_posterior_probability, "\n")
+```
+## exercise 5.2
+
+```{r}
+mu0_prior=75
+k0_prior=c(1,2,4,8,16,32)
+v0_prior=c(1,2,4,8,16,32)
+SS0_sq=100
+nA=16
+Abar=75.2
+Asd=7.3
+SSA=Asd^2*(nA-1)
+
+kn_posteriorA=rep(0,length(k0_prior))
+mu_posteriorA=rep(0,length(k0_prior))
+vn_posteriorA=rep(0,length(k0_prior))
+sigma_sq_posteriorA=rep(0,length(k0_prior))
+thetaA=matrix(0,nrow=100000,ncol=6)
+sigma_samplesA=matrix(0,nrow=100000,ncol=6)
+for(i in 1:length(k0_prior))
+  {
+  kn_posteriorA[i]=k0_prior[i] + nA
+   mu_posteriorA[i]=(k0_prior[i] * mu0_prior+ nA * Abar) / kn_posteriorA[i]
+   vn_posteriorA[i]=v0_prior[i] + nA
+sigma_sq_posteriorA[i]=(SSA+SS0_sq*v0_prior[i]+(k0_prior[i]*nA/kn_posteriorA[i])*((Abar-mu0_prior)^2))/vn_posteriorA[i]
+sigma_samplesA[,i]=sqrt(rinvgamma(100000,vn_posteriorA[i]/2,vn_posteriorA[i]*sigma_sq_posteriorA[i]/2))
+thetaA[,i]=rnorm(100000, mu_posteriorA[i], sigma_samplesA[,i]/sqrt(kn_posteriorA[i]))}
+
+nB=16
+Bbar = 77.5
+Bsd = 8.1
+SSB=Bsd^2*(nB-1)
+kn_posteriorB=rep(0,length(k0_prior))
+mu_posteriorB=rep(0,length(k0_prior))
+vn_posteriorB=rep(0,length(k0_prior))
+sigma_sq_posteriorB=rep(0,length(k0_prior))
+thetaB=matrix(0,nrow=100000,ncol=6)
+sigma_samplesB=matrix(0,nrow=100000,ncol=6)
+for(i in 1:length(k0_prior))
+  {kn_posteriorB[i]=k0_prior[i] + nB
+   mu_posteriorB[i]=(k0_prior[i] * mu0_prior+ nB * Bbar) / kn_posteriorB[i]
+   vn_posteriorB[i]=v0_prior[i] + nB
+sigma_sq_posteriorB[i]=(SSB+SS0_sq*v0_prior[i]+(k0_prior[i]*nB/kn_posteriorB[i])*((Bbar-mu0_prior)^2))/vn_posteriorB[i]
+sigma_samplesB[,i]=sqrt(rinvgamma(100000,vn_posteriorB[i]/2,vn_posteriorB[i]*sigma_sq_posteriorB[i]/2))
+thetaB[,i]=rnorm(100000, mu_posteriorB[i], sigma_samplesB[,i]/sqrt(kn_posteriorB[i]))}
+pro_thetaA_less_thetaB=rep(0,length(k0_prior))
+for(i in 1:length(k0_prior))
+  pro_thetaA_less_thetaB[i]=length(which(thetaA[,i]<thetaB[,i]))/100000
+
+plot(k0_prior,pro_thetaA_less_thetaB,type='l')
+```
+
+#The probability of thetaA less than thetaB decreases with increasing k0's prior values. Besides, the decreasing rate is decreasing.
+
+# Problem 2
+```{r}
+c_n = 32
+c_bar <- 1.013
+c_sd=0.24
+
+t_n = 36
+t_bar = 1.173
+t_sd = 0.20
+
+sigma_c = Inf
+sigma_t = Inf
+
+posterior_mean_c = c_bar
+posterior_variance_c = c_sd^2 / c_n
+
+posterior_mean_t = t_bar
+posterior_variance_t = t_sd^2 / t_n
+
+n_samples <- 10000
+sample_t=rt(n_samples,t_n-1)*sqrt(posterior_variance_t/t_n)+posterior_mean_t
+sample_c=rt(n_samples,c_n-1)*sqrt(posterior_variance_c/c_n)+posterior_mean_c
+posterior_mean_diff = sample_t-sample_c
+
+hist(posterior_mean_diff,  col = "pink", xlab = "mut - muc", main = "Posterior Distribution of mut - muc")
+quantiles = quantile(posterior_mean_diff, c(0.025, 0.975))
+lower_interval = quantiles[1]
+upper_interval = quantiles[2]
+
+cat("Approximate 95% posterior interval for mut - muc:", lower_interval, "to", upper_interval, "\n")
+```
+$\mu{\sim}t_{n-1}(\overline{x},\frac{s^2}{n})$
+
+$\mu_c{\sim}t_{n-1}(1.013,\frac{0.24^2}{32})$
+$\mu_t{\sim}t_{n-1}(1.173,\frac{0.2^2}{36})$
+
+
+
