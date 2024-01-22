@@ -1,0 +1,268 @@
+---
+title: "525 HW4"
+output: pdf_document
+date: "2023-09-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## problem 1
+# Write the target distribution to be obtained
+# Select a suitable proposal distribution
+# Take random samples from the proposal distribution
+# Bring the samples to the target and proposal to find the importance weights
+# Use the importance weights to compute the expected value.
+```{r}
+weight1 = 0.3
+weight2 = 0.7
+
+target_distribution = function(x) {
+  weight1 * dbeta(x, shape1 = 5, shape2 = 2) +
+  weight2 * dbeta(x, shape1 = 2, shape2 = 8)
+}
+
+proposal_distribution = function(x) {
+  dunif(x, min = 0, max = 1)
+}
+
+num_samples = 10000
+samples = runif(num_samples, min = 0, max = 1)
+
+importance_weights = target_distribution(samples) / proposal_distribution(samples)
+
+expected_value_estimate = sum(samples * importance_weights) / sum(importance_weights)
+
+probability_estimate = sum(((samples >= 0.45) & (samples <= 0.55)) * importance_weights) / sum(samples)
+
+print(paste("Estimated Expected Value:", expected_value_estimate))
+print(paste("Estimated Probability in [0.45, 0.55]:", probability_estimate))
+
+```
+
+## problem 2
+# Define the likelihood function
+# Define the prior distributions for mu
+# Define the proposal function
+# Using Metropolis-Hastings algorithm to get the Markov chain(using present values to get future values)
+# Using acceptance ratio to judge the chain.
+
+```{r}
+school1=c(2.11,9.75,13.88,11.3,8.93,15.66,16.38,4.54,8.86,11.94,12.47,11.11,11.65,14.53,9.61,7.38,3.34,9.06,9.45,5.98,7.44,8.5,1.55,11.45,9.73)
+library(MCMCpack)
+library(ggplot2)
+
+# Define the likelihood function
+likelihood = function(mu) {
+  n = length(school1) 
+  log_likelihood = -0.5 * n * log(2 * pi) - 0.5 * sum((school1 - mu)^2)
+  return(log_likelihood)
+}
+
+# Define the prior for mu
+prior_mu = function(mu) {
+  mu0 = 5
+  tau0_sq = 0.5
+  log_prior = -0.5 * log(2 * pi) - 0.5 * log(tau0_sq) - 0.5 * ((mu - mu0)^2) / tau0_sq
+  return(log_prior)
+}
+
+# Define the proposal function
+proposal_mu = function(mu, sigma_p) {
+  return(rnorm(1, mean = mu, sd = sigma_p))
+}
+
+# Metropolis-Hastings algorithm
+metropolis_hastings = function(mu_init, sigma_p, num_samples,burn_in) {
+  mu_chain = numeric(num_samples)
+  mu_chain[1] = mu_init
+  accept_count=0
+  i=2
+  for (i in 2:num_samples) {
+    mu_proposed = proposal_mu(mu_chain[i - 1], sigma_p)
+    log_acceptance_ratio = likelihood(mu_proposed) + prior_mu(mu_proposed)-(
+                             likelihood(mu_chain[i - 1]) + prior_mu(mu_chain[i - 1]))
+    
+    if (log(runif(1)) < log_acceptance_ratio) {
+      mu_chain[i] = mu_proposed
+      if(i>burn_in)
+        accept_count=accept_count+1
+    } else {
+      mu_chain[i] = mu_chain[i-1]
+    }
+  }
+  mu_chain=mu_chain[(burn_in+1):num_samples]
+  acceptance_rate=accept_count/(num_samples-burn_in)
+  autocorrelation = acf(mu_chain, plot = TRUE)
+  return(list(mu_chain = mu_chain,acceptance_rate=acceptance_rate,autocorrelation = autocorrelation))
+}
+
+sigma_p_values = c(0.5, 2)  
+num_samples = 10000          
+burn_in = 1000               
+
+results = list()
+
+for (sigma_p in sigma_p_values) {
+  result = metropolis_hastings( mu_init = 5, sigma_p = sigma_p, num_samples = num_samples,burn_in = burn_in)
+  results[[as.character(sigma_p)]] = result
+}
+
+par(mfrow = c(length(sigma_p_values), 2))
+for (i in 1:length(sigma_p_values)) {
+  sigma_p = sigma_p_values[i]
+  mu_chain = results[[as.character(sigma_p)]]$mu_chain
+  plot(mu_chain, type = "l", main = paste("Trace Plot (sigmap =", sigma_p, ")"))
+  hist(mu_chain, main = paste("Histogram (sigmap =", sigma_p, ")"))
+}
+
+for (sigma_p in sigma_p_values) {
+  acceptance_rate = results[[as.character(sigma_p)]]$acceptance_rate
+  autocorrelation = results[[as.character(sigma_p)]]$autocorrelation
+  cat("Acceptance Rate (sigmap =", sigma_p, "):", acceptance_rate, "\n")
+}
+```
+# According to the acceptance ratio, it is better to choose 0.5.
+
+## problem 3
+# Define the likelihood function
+# Define the prior distributions for parameters
+# Define the proposal function
+# Using Metropolis-Hastings algorithm to get the Markov chains(using present values to get future values)
+# Using acceptance ratio to judge the chain.
+
+```{r}
+data=c(2.3656491,2.4952035,1.083781, 0.7586751, 0.8780483, 1.2765341,
+1.4598699, 0.1801679 ,-1.0093589 ,1.4870201 ,-0.1193149 ,0.2578262)
+
+likelihood = function(mu, tau, data) {
+  n = length(data)
+  log_likelihood = -0.5 * n * log(2 * pi) - 0.5 * n * log(tau) - (1 / (2 * tau)) * sum((data - mu)^2)
+  return(log_likelihood)
+}
+
+prior_mu = function(mu) {
+  if (mu >= 0 && mu <= 1) {
+    return(log(dbeta(mu, shape1 = 2, shape2 = 2)))
+  } else {
+    return(-Inf)  
+  }
+}
+
+prior_tau = function(tau) {
+  if (tau > 0) {
+    return(log(dlnorm(tau, meanlog = 1, sdlog = sqrt(10))))
+  } else {
+    return(-Inf)  
+  }
+}
+
+proposal = function(params, sigma_mu, sigma_tau) {
+  mu_proposed = rnorm(1, mean = params[1], sd = sigma_mu)
+  tau_proposed = rnorm(1, mean = params[2], sd = sigma_tau)
+  return(c(mu_proposed, abs(tau_proposed)))
+}
+
+# Metropolis-Hastings algorithm
+metropolis_hastings = function(data, num_samples, sigma_mu, sigma_tau) {
+  params_chain = matrix(NA, nrow = num_samples, ncol = 2)
+  params_chain[1, ] = c(0.5, 1) 
+  accept_count = 0
+  
+  for (i in 2:num_samples) {
+
+    params_proposed = proposal(params_chain[i - 1, ], sigma_mu, sigma_tau)
+    
+    log_acceptance_ratio = likelihood(params_proposed[1], params_proposed[2], data) +
+                            prior_mu(params_proposed[1]) + prior_tau(params_proposed[2]) -
+                            likelihood(params_chain[i - 1, 1], params_chain[i - 1, 2], data) -prior_mu(params_chain[i - 1, 1]) - prior_tau(params_chain[i - 1, 2])
+    
+    if (log(runif(1)) < log_acceptance_ratio) {
+      params_chain[i, ] = params_proposed
+      accept_count = accept_count + 1
+    } else {
+      params_chain[i, ] = params_chain[i - 1, ]
+    }
+  }
+  
+  posterior_prob_mu_gt_0.5 = mean(params_chain[, 1] > 0.5)
+  
+  return(list(params_chain = params_chain, posterior_prob_mu_gt_0.5 = posterior_prob_mu_gt_0.5))
+}
+
+num_samples = 10000  
+sigma_mu = 0.1
+sigma_tau=0.1
+
+result = metropolis_hastings(data, num_samples, sigma_mu, sigma_tau)
+
+par(mfrow = c(2, 1))
+plot(result$params_chain[, 1], type = "l", main = "Posterior Distribution of mu")
+plot(result$params_chain[, 2], type = "l", main = "Posterior Distribution of tau")
+
+
+cat("Posterior Probability that mu > 0.5:", result$posterior_prob_mu_gt_0.5, "\n")
+
+
+```
+
+## problem 4 (a)
+# Define he statistical model, including the likelihood function and the prior distributions for all parameters.
+# Determine the full conditional distributions of each parameter in the model given the other parameters. 
+# Start with initial values or values drawn from the prior distributions.
+# Sample from its full conditional distribution given the current values of the other parameters.
+# Update the parameter's value with the sampled value.
+# Collect the samples for each parameter at each iteration. These samples form a Markov chain.
+# The conditional distribution are as follows:
+$\mu\mid\sigma^2, y \sim N(5\frac{\sigma^2}{\sigma^2+12.5}+\frac{12.5}{\sigma^2+12.5}\overline{y}, \frac{0.5\sigma^2}{\sigma^2+12.5})$
+$\sigma^2\mid\mu, y \sim Inv-Gamma(13.5, \frac{1}{2}\sum\limits^{25}\nolimits_{i=1}{(y_i-\mu)^2}+4)$
+
+## problem 4 (b)
+```{r}
+n = length(school1)
+mu_0 = 5
+tau_0_sq= 0.5
+alpha=1
+beta=4
+ xbar=mean(school1)
+ sh1=(n/2)+alpha
+ sigma2=theta=rep(0,num_samples)
+ sigma2[1]=1/rgamma(1,shape=alpha,rate=beta)
+ B=sigma2[1]/(sigma2[1]+n*tau_0_sq)
+ theta[1]=rnorm(1,m=B*mu_0+(1-B)*xbar,sd=sqrt(tau_0_sq*B))
+ for (i in 2:num_samples){
+ B=sigma2[i-1]/(sigma2[i-1]+n*tau_0_sq)
+ theta[i]=rnorm(1,m=B*mu_0+(1-B)*xbar,sd=sqrt(tau_0_sq*B))
+ ra1=(1/2)*(sum((school1-theta[i])^2))+beta
+ sigma2[i]=1/rgamma(1,shape=sh1,rate=ra1)}
+
+acf_mu=acf(theta)
+acf_sigma2=acf(sigma2)
+
+ess_mu = num_samples / (1 + 2 * sum(acf_mu$acf[-1]))
+ess_sigma_sq = num_samples / (1 + 2 * sum(acf_sigma2$acf[-1]))
+cat("effective sample size of mu:", ess_mu, "\n")
+cat("effective sample size of sigma square:", ess_sigma_sq, "\n")
+```
+
+# problem 4 (c)
+```{r}
+sigma2_chain=sigma2[(burn_in+1):num_samples]
+hist(sigma2_chain, breaks = 30, freq = FALSE, main = "conditional Density estimates of sigma2", xlab = "sigma2", col = "lightblue", border = "black")
+```
+
+## problem 4 (d)
+```{r}
+hist(sigma2_chain, breaks = 30, freq = FALSE, main = "Conditional Density estimates of sigma2", xlab = "sigma2", col = "lightblue", border = "black")
+sigma_sq_density = density(sigma2_chain)
+lines(sigma_sq_density, col = "red", lwd = 2)
+normalized_chain=sigma2_chain/sum(sigma2_chain)
+pdf_sigma_sq_normalized = density(sigma2_chain/sum(sigma2_chain))
+hist(normalized_chain, breaks = 30, freq = FALSE, main = " Conditional Density estimates of sigma2", xlab = "nomalized sigma2", col = "lightblue", border = "black")
+lines(pdf_sigma_sq_normalized, col = "green", lwd = 2)
+
+```
+
+# Based on the two plots it can be seen that the non-normalized density profile is almost identical to the normalized density profile.
+
