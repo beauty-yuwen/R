@@ -1,0 +1,88 @@
+---
+title: "525 HW1"
+output: pdf_document
+date: "2023-08-30"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercise 3.1(b)
+
+```{r}
+theta <- seq(0, 1, by = 0.1)
+likelihood <- dbinom(57, 100, theta)
+normalized_likelihood <- likelihood / sum(likelihood)
+plot(theta,normalized_likelihood)
+```
+
+## Exercise 3.1(c) 
+
+```{r}
+theta <- seq(0, 1, by = 0.1)
+likelihood <- dbinom(57, 100, theta)
+normalized_likelihood <- likelihood / sum(likelihood)
+plot(theta,normalized_likelihood)
+```
+# The prior distribution is uniform distribution.
+
+## Exercise 3.1(d) 
+
+```{r}
+theta1 <- seq(0, 1, by = 0.001)
+likelihood <- dbinom(57, 100, theta1)
+normalized_likelihood<- likelihood / sum(likelihood)
+plot(theta1,normalized_likelihood,type='l')
+```
+
+## Exercise 3.1(e) 
+
+```{r}
+theta=seq(0,1,by=0.00001)
+plot(dbeta(theta, 58, 44))
+```
+# According to the four plots, if the prior distribution is uniform distribution, the posterior distribution is beta distribution. Besides, different value intervals of theta gives different plots. 
+
+## Exercise 3.2
+
+```{r}
+library(ggplot2)
+observed_sum <- 57
+total_sample <- 100
+theta_0 <- seq(0.1, 0.9, by = 0.1)
+n_0 <- c(1, 2, 8, 16, 32)
+theta_matrix <- matrix(NA, nrow = length(theta_0), ncol = length(n_0))
+prob_matrix <- matrix(NA, nrow = length(theta_0), ncol = length(n_0))
+for (i in 1:length(theta_0)) {
+  for (j in 1:length(n_0)) {
+    theta0 <- theta_0[i]
+    n0 <- n_0[j]
+    a <- theta0 * n0
+    b <- (1 - theta0) * n0
+    beta_prior <- dbeta(theta0, a, b)
+    posterior_prob <- pbeta(0.6, a + observed_sum, b + total_sample - observed_sum)
+    theta_matrix[i, j] <- theta0
+    prob_matrix[i, j] <- posterior_prob
+  }
+}
+plot_data <- expand.grid(theta0 = theta_0, n0 = n_0)
+plot_data$Probability <- as.vector(prob_matrix)
+ggplot(plot_data, aes(x = theta0, y = n0, z = Probability)) +
+  geom_contour() +
+  labs(x = "theta0", y = "n0", z = "Pr(theta > 0.5|sum of Yi = 57)") +
+  scale_x_continuous(breaks = theta_0) +
+  scale_y_continuous(breaks = n_0) +
+  theme_bw()
+```
+# Areas of higher posterior probabilities (more crowed lines) indicate combinations of theta0 and n0 where you are more likely to believe that theta0> 0.5 based on the observed data. When theta0 is fixed, the larger n0 is, the higher the probability that theta is greater than 0.5.
+
+## Exercise 4.1 
+
+```{r}
+samples1 <- rbeta(5000, shape1 = 58, shape2 = 100 - 58 + 1)
+samples2 <- rbeta(5000,shape1=31,shape2=21)
+prob <- mean(samples1 < samples2)
+cat("Estimated Pr(theta1<theta2|data and prior):", prob, "\n")
+```
+
