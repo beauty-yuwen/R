@@ -27,7 +27,7 @@ For this project, I chose the bank marketing dataset. The data is related to the
 * loan：     Whether the surveyed client has personal loan
 * contact：         Contact communication type
 * month：       Last contact month of year
-* duration：        Last contact duration in seconds
+* duration：        Last contact duration in second
 * campaign：      Number of contacts performed during this campaign and for this client
 * pdays： Number of days that passed by after the client was last contacted from a previous
 campaign
@@ -35,5 +35,39 @@ campaign
 * poutcome： Outcome of the previous marketing campaign
 * y： Whether the surveyed client has subscribed a term deposit?
 
+According to the data description, all variables are categorical variables except for ‘age’, ‘balance’, and ‘duration’, which are continuous variables.
+#### Data Pre-Processing and Data Cleaning
+In this part, I did data pre-processing and data cleaning. I considered missing values and unbalanced data. Besides, I also seperate the data set as training dataset and testing dataset.
+#### Logistic Regression
+From the data description, it is clear that the response variable used in this report is a dichotomous variable. Logistic regression was first considered to build the model.
+The steps of using logistoic regression to
+build the model are as follows:
+* Deal with the dichotomous variable. Give the data exact numbers.
+* It is not possible to fit this discretevariable directly, but to fit the conditional
+probability.
+* A generalized linear model is used to calculate this conditional probability.
+* Build the final linear model. However, It is not enough to just build such a linear model.
 
+However, It is not enough to just build such a linear model. To simplify the model, we should also explore the correlation between the independent variables. Therefore, in this report, principal
+component analysis was again used to choose the independent variables.
+
+After getting the model, this report tests the GLM model on the testing data set. By
+showing a ROC,the precision can be seen clearly.
+#### Discriminant Analysis(Distance discrimination+Bayesian discrimination)
+Discriminant analysis is also known as Linear Discriminant Analysis (LDA). It is a
+statistical method that uses samples of known categories to build a discriminant model to discriminate samples of unknown categories. Its basic steps are:
+* Determine the category of the explanatory variables
+* Choose the discriminant method, including distance discriminant, Fisher discriminant, etc.
+* Build the model according to the discriminant method
+* Prediction
+
+After getting the model, this report tests the model on the testing data set. By
+showing the confusion matrix,the precision can be seen clearly.
+#### Model Improvement
+The accuracy of prediction using the discriminant analysis is not very satisfactory. So I also use decision trees again for classification learning, so that it can improve the model. Decision trees are an algorithm for solving classification problems.(which is appropriate for solving this problem of
+whether the clients will subscribe the product). The decision tree algorithm uses a tree-like structure and uses layers of inference to achieve the final classification.
+In prediction, a judgment is made at the inner node of the tree with a certain attribute value, and according to the judgment result, it decides which branch node to enter until it reaches the leaf node
+to get the classification result.
+
+## All results mentioned before will be shown in RMD file.
 
