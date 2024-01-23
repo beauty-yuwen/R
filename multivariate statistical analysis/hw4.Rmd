@@ -1,0 +1,212 @@
+---
+title: "541 hw 4"
+output: pdf_document
+date: "2023-02-27"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem 1
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/541/penguins_data.csv")
+data1=read.csv("/Users/liangdameinv/Desktop/541/penguins_species.csv")
+x=data[,2:6]
+kmeans_out=c(rep(0,9))
+for(i in 1:9)
+  kmeans_out[i]=kmeans(x,centers=i+1,iter.max = 100,nstar=20)
+
+CH_index = function(X,clusters){
+  clusters = as.numeric(as.factor(clusters)) #force good numbering
+  n = length(clusters)
+  K = max(clusters)
+  if(K == 1){
+    return(0)
+  }
+  
+  SSE = function(ind){
+    A = X[ind,]
+    sum(A^2) - length(ind)*sum(colMeans(A)^2)
+  }
+  
+  indices = list()
+  for(i in 1:max(clusters)){
+    indices[[i]] = which(clusters==i)
+  }
+  
+  SSE_total = SSE(ind=c(1:n))
+  
+  SSE_clusters = lapply(indices,SSE)
+  
+  SSW = sum(unlist(SSE_clusters))
+  
+  SSB = SSE_total - SSW
+  
+  return(SSB/(K-1)/(SSW/(n-K)))
+}
+CH_index_value=c(rep(0,9))
+for(i in 1:9)
+  CH_index_value[i]=CH_index(x,kmeans_out[[i]])
+CH_index_value
+which(CH_index_value==max(CH_index_value))#we should  have 6 clusters, because it has the largest CH index, which means there is a larger part to be explained in the clustering process.
+
+#This clustering does not provide useful information because this dataset does not provide information closely related to species, and the results of clustering may correspond to different species.
+```
+## According to the CH, we should  have 6 clusters, because it has the largest CH index, which means there is a      larger part to be explained in the clustering process.
+## This clustering does not provide useful information, because this original dataset does not provide information    closely related to species, and the results of clustering may correspond to different species.
+
+## Problem 2
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/541/penguins_dist_mat.csv")
+x=data[,2:334]
+
+silhouette_dissimilarity = function(dist_mat,clusters){
+  clusters = as.numeric(as.factor(clusters)) #force good numbering
+  K = max(clusters)
+  ind = list()
+  for(k in 1:K) ind[[k]] = which(clusters==k)
+  cluster_sizes = unlist(lapply(ind,length))
+  aversion = rep(NA,K)
+s = rep(NA,length(clusters))
+  for(i in 1:length(clusters)){
+    if(length(ind[[clusters[i]]])==1){
+      s[i] = 0
+    }else{
+      for(j in 1:K){
+        if(clusters[i]==j){
+          aversion[j] = sum(dist_mat[i,ind[[j]]])/(cluster_sizes[j]-1)
+        }else{
+          aversion[j] = sum(dist_mat[i,ind[[j]]])/cluster_sizes[j]
+        }
+      }
+      a = aversion[clusters[i]]
+      b = min(aversion[-clusters[i]])
+      s[i] = (b-a)/max(c(b,a))
+    }
+  }
+  return(sum(s))
+}
+dist_mat = as.matrix(dist(x))
+h_clust_out = hclust(as.dist(dist_mat),method="complete")
+h_clusters=matrix(data=NA,nrow=333,ncol=333)
+for(i in 1:333)
+  h_clusters[,i] = as.matrix(cutree(h_clust_out,i))
+s_h=c(rep(0,333))
+for(i in 1:333)
+s_h[i] = silhouette_dissimilarity(dist_mat,h_clusters[,i])
+plot(s_h)
+silhouette_dissimilarity_s = function(dist_mat,clusters){
+  clusters = as.numeric(as.factor(clusters)) #force good numbering
+  K = max(clusters)
+  ind = list()
+  for(k in 1:K) ind[[k]] = which(clusters==k)
+  cluster_sizes = unlist(lapply(ind,length))
+  aversion = rep(NA,K)
+s = rep(NA,length(clusters))
+  for(i in 1:length(clusters)){
+    if(length(ind[[clusters[i]]])==1){
+      s[i] = 0
+    }else{
+      for(j in 1:K){
+        if(clusters[i]==j){
+          aversion[j] = sum(dist_mat[i,ind[[j]]])/(cluster_sizes[j]-1)
+        }else{
+          aversion[j] = sum(dist_mat[i,ind[[j]]])/cluster_sizes[j]
+        }
+      }
+      a = aversion[clusters[i]]
+      b = min(aversion[-clusters[i]])
+      s[i] = (b-a)/max(c(b,a))
+    }
+  }
+  return(s)
+}
+kmeans_out=kmeans(x,centers=4,iter.max = 100,nstar=20)
+plot(silhouette_dissimilarity_s(dist_mat, kmeans_out$cluster),
+     col = kmeans_out$cluster,ylim=c(-1,1),
+     main="Silhouette from Dissimilarity Matrix for k-means clusters",
+     ylab="Silhouette")
+abline(0,0)
+```
+## According to the silhouette score, we should choose K=4. And according to the plot, it is poorly seperated,       beacuse the silhouette score near 0.
+
+## Problem 3
+
+```{r}
+silhouette_similarity = function(weights_mat,clusters){
+  #uses a-b instead of b-a below, so larger (closer to 1) is better
+  clusters = as.numeric(as.factor(clusters)) #force good numbering
+  K = max(clusters)
+  ind = list()
+  for(k in 1:K) ind[[k]] = which(clusters==k)
+  cluster_sizes = unlist(lapply(ind,length))
+  affinity = rep(NA,K)
+  s = rep(NA,length(clusters))
+  for(i in 1:length(clusters)){
+    if(length(ind[[clusters[i]]])==1){
+      s[i] = 0
+    }else{
+      for(j in 1:K){
+        if(clusters[i]==j){
+          affinity[j] = sum(weights_mat[i,ind[[j]]])/(cluster_sizes[j]-1)
+        }else{
+          affinity[j] = sum(weights_mat[i,ind[[j]]])/cluster_sizes[j]
+        }
+      }
+      a = affinity[clusters[i]]
+      b = max(affinity[-clusters[i]])
+      s[i] = (a-b)/max(c(b,a))
+    }
+  }
+  return(sum(s))
+}
+data=read.csv("/Users/liangdameinv/Desktop/541/penguins_weights_mat.csv")
+weights_mat=data[,2:334]
+d = 1/sqrt(colSums(weights_mat))
+normalized_laplacian = diag(nrow(weights_mat)) - outer(d,d,"*")*weights_mat
+ed = eigen(normalized_laplacian)
+s_sc=c(rep(0,332))
+k_means_graph= as.data.frame(kmeans(ed$vectors[,nrow(weights_mat)- 2:1 + 1],2,iter.max = 100, nstart = 20)[1])
+for(i in 2:331)
+  k_means_graph=cbind(k_means_graph,as.data.frame(kmeans(ed$vectors[,nrow(weights_mat)- (i+1):1 + 1],i+1,iter.max = 100, nstart = 20)[1]))
+for(i in 2:331)
+s_sc[i-1] = silhouette_similarity(weights_mat,k_means_graph[,i])
+plot(s_sc)
+K=2
+silhouette_similarity_s = function(weights_mat,clusters){
+  clusters = as.numeric(as.factor(clusters)) 
+  K = max(clusters)
+  ind = list()
+  for(k in 1:K) ind[[k]] = which(clusters==k)
+  cluster_sizes = unlist(lapply(ind,length))
+  affinity = rep(NA,K)
+  s = rep(NA,length(clusters))
+  for(i in 1:length(clusters)){
+    if(length(ind[[clusters[i]]])==1){
+      s[i] = 0
+    }else{
+      for(j in 1:K){
+        if(clusters[i]==j){
+          affinity[j] = sum(weights_mat[i,ind[[j]]])/(cluster_sizes[j]-1)
+        }else{
+          affinity[j] = sum(weights_mat[i,ind[[j]]])/cluster_sizes[j]
+        }
+      }
+      a = affinity[clusters[i]]
+      b = max(affinity[-clusters[i]])
+      s[i] = (a-b)/max(c(b,a))
+    }
+  }
+  return(s)
+}
+plot(silhouette_similarity_s(weights_mat,k_means_graph[,2]),col=k_means_graph[,2],ylim=c(-1,1),
+     main="Silhouette from Similarity Matrix for spectral clusters",
+     ylab="Silhouette")
+abline(0,0)#It is poorly seperated.
+```
+## According to the silhouette score, we should choose K=2. And according to the plot, it is poorly seperated,       beacuse the silhouette scores are positive.
+
+
