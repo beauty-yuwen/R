@@ -1,0 +1,180 @@
+---
+title: "541 hw3"
+output: pdf_document
+date: "2023-02-13"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem 1
+
+```{r}
+## a b
+data=read.csv("/Users/liangdameinv/Desktop/541/CASchools_normalized.csv")
+FA_df = function(p){
+  k=c(1:p)
+  df = ((p-k)^2-(p+k))/2
+  names(df) = k
+  df[df>=0] ## which the excess degrees of freedom are non-negative
+}
+n = nrow(data[,2:11])
+data = as.matrix(data[,2:11])
+S = 1/n*crossprod(data)
+p = ncol(data)
+df = FA_df(p)
+df
+k=length(df)
+k
+fa_out = factanal(data,k,scores = "regression")
+
+## c
+dim_fa = p*k-choose(k,2)+p
+QQt_plus_psi = tcrossprod(fa_out$loadings) + diag(fa_out$uniquenesses)
+log_likelihood = as.numeric(-n/2*(determinant(QQt_plus_psi,logarithm=TRUE)$modulus+sum(solve(QQt_plus_psi)*S)))
+print(paste("Trace of inverse of MLE for Sigma under FA times the MLE for Sigma ",
+            "under unrestricted multivariate normal is ",round(sum(solve(QQt_plus_psi)*S),3),
+            ". This number should should be ",p,".",sep=""))
+
+LRT_GoFT = as.numeric(n*(determinant(QQt_plus_psi,logarithm=TRUE)$modulus-
+                           determinant(S,logarithm = TRUE)$modulus))
+p_value = pchisq(LRT_GoFT,df=choose(p+1,2)-dim_fa,lower.tail = FALSE)
+print(paste("The LRT test statistic is ",signif(LRT_GoFT,3)," and the p-value is ",
+            signif(p_value,3),".",sep=""))
+
+## d
+AIC_fa = -2*log_likelihood+2*dim_fa
+AIC_full = n*determinant(S,logarithm = TRUE)$modulus+n*p+p*(p+1)
+print(c(AIC_fa = AIC_fa, AIC_full = AIC_full))
+## according to the AIC, it is adequate.
+BIC_fa=-2*log_likelihood+dim_fa*log(n)
+BIC_fa
+```
+## According to the LRT test, the data could be generated from a multivariate normal model.Besides, I would like to choose BIC model, the result shows that it can fit the model better.
+
+
+## Problem2
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/541/College_normalized.csv")
+## a
+FA_df = function(p){
+  k=c(1:p)
+  df = ((p-k)^2-(p+k))/2
+  names(df) = k
+  df[df>=0] ## which the excess degrees of freedom are non-negative
+}
+
+control=list(
+  nstart = 20,
+  lower = 1e-6,
+  opt = list(
+    maxit=1e6,
+    lmm=20,
+    pgtol=.Machine$double.eps^0.75,
+    factr=1e2
+  )
+)
+
+n = nrow(data[,2:16])
+data = as.matrix(data[,2:16])
+S = 1/n*crossprod(data)
+p = ncol(data)
+df = FA_df(p)
+k=length(df)
+fa_out =factanal(data,k,scores = "regression",control = control)
+
+## b
+FA_df1 = function(p){
+  k=c(p:1)
+  df = ((p-k)^2-(p+k))/2
+  names(df) = k
+  df[df>=0] 
+}
+
+control=list(
+  nstart = 20,
+  lower = 1e-6,
+  opt = list(
+    maxit=1e6,
+    lmm=20,
+    pgtol=.Machine$double.eps^0.75,
+    factr=1e2
+  )
+)
+
+p = ncol(data)
+df = FA_df1(p)
+k=length(df)
+fa_out1 =factanal(data,k,scores = "regression",control = control)
+
+## c
+dim_fa = p*k-choose(k,2)+p
+QQt_plus_psi = tcrossprod(fa_out$loadings) + diag(fa_out$uniquenesses)
+log_likelihood = as.numeric(-n/2*(determinant(QQt_plus_psi,logarithm=TRUE)$modulus+sum(solve(QQt_plus_psi)*S)))
+print(paste("Trace of inverse of MLE for Sigma under FA times the MLE for Sigma ",
+            "under unrestricted multivariate normal is ",round(sum(solve(QQt_plus_psi)*S),3),
+            ". This number should should be ",p,".",sep=""))
+AIC_fa = -2*log_likelihood+2*dim_fa
+AIC_full = n*determinant(S,logarithm = TRUE)$modulus+n*p+p*(p+1)
+print(c(AIC_fa = AIC_fa, AIC_full = AIC_full))
+## d
+BIC_fa=-2*log_likelihood+dim_fa*log(n)
+BIC_fa
+```
+## According to the result, bacward selection and forward selection give same models. Their AIC and BIC should also be the same. The model selected in these four ways is same.
+
+## Problem 3 data1
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/541/penguins_2_normalized.csv")
+data = as.matrix(data[,2:26])
+control=list(
+  nstart = 20,
+  lower = 1e-6,
+  opt = list(
+    maxit=1e6,
+    lmm=20,
+    pgtol=.Machine$double.eps^0.75,
+    factr=1e2
+  )
+)
+fa_out = factanal(data,2,scores = "regression",control = control)
+
+fa_varimax_loadings=fa_out$loadings
+fa_promax_loadings=promax(fa_varimax_loadings)
+
+psi=diag(fa_out$uniquenesses)
+psi_inv=diag(1/fa_out$uniquenesses)
+Q=fa_promax_loadings$loadings
+factor_scores_promax_loading=data%*%(psi_inv%*%Q)%*%solve(t(Q)%*%psi_inv%*%Q)
+svd_data=svd(data)
+is.logical(factor_scores_promax_loading[,1]==svd_data$u[,1])
+is.logical(factor_scores_promax_loading[,2]==svd_data$u[,2])
+```
+
+## These 2 loadings capture the correlations between observed variables. After comparing the results, these factor scores and the first two left singular vectors are same.
+
+## Problem 3 data2
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/541/penguins_4_normalized.csv")
+data = as.matrix(data[,2:26])
+fa_out = factanal(data,4,scores = "regression",control = control)
+
+fa_varimax_loadings=fa_out$loadings
+fa_promax_loadings=promax(fa_varimax_loadings)
+
+psi=diag(fa_out$uniquenesses)
+psi_inv=diag(1/fa_out$uniquenesses)
+Q=fa_promax_loadings$loadings
+factor_scores_promax_loading=data%*%(psi_inv%*%Q)%*%solve(t(Q)%*%psi_inv%*%Q)
+svd_data=svd(data)
+is.logical(factor_scores_promax_loading[,1]==svd_data$u[,1])
+is.logical(factor_scores_promax_loading[,2]==svd_data$u[,2])
+is.logical(factor_scores_promax_loading[,3]==svd_data$u[,3])
+is.logical(factor_scores_promax_loading[,4]==svd_data$u[,4])
+```
+
+## These 2 loadings capture the correlations between observed variables.After comparing the results, these factor scores and the first two left singular vectors are same.
