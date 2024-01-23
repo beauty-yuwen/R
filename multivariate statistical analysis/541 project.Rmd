@@ -1,0 +1,408 @@
+---
+title: "541 project"
+output: pdf_document
+date: "2023-04-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## introduction
+## With the further development of the global economic level, the pressure of competition among enterprises has     further increased. Unlike other businesses, commercial banks are intermediary organizations, which are            financial institutions capable of providing deposit and loan operations. Deposits are the main source of funds    for commercial banks. Therefore, in order to enhance their competitiveness, banks are working to attract new      users to buy the bank's term deposit products while retaining their old customers. This report will explore this   behavior and examine what factors influence customers' decision, and  predict whether they will buy this product   or not. This can certainly help banks to target their customers, reduce the pressure on the business and stand    out from the competition.
+
+## data description
+## For this project, I chose the bank marketing dataset. The data is related to the direct marketing activities of    a Portuguese banking institution. It is used to predict whether a customer will subscribe the term deposit        product or not. There are 45211 data and 16 variables in this dataset and all data are sorted by date. The        meanings of the variables are shown in the table below.
+
+```{r}
+library(kableExtra)
+a1=cbind("age","Age of surveyed clients")
+a2=cbind("job","Job type of surveyed clients")
+a3=cbind("marital","Marital status of clients")
+a4=cbind("education","Educational level of clients")
+a5=cbind("default","Whether the surveyed client has a record of default")
+a6=cbind("balance","Balance the clients have")
+a7=cbind("housing","Whether the surveyed client has housing loan")
+a8=cbind("loan","Whether the surveyed client has personal loan")
+a9=cbind("contact","Contact communication type")
+a10=cbind("month","Last contact month of year")
+a11=cbind("duration","Last contact duration in seconds")
+a12=cbind("campaign","Number of contacts performed during this campaign and for this client")
+a13=cbind("pdays","Number of days that passed by after the client was last contacted from a previous campaign")
+a14=cbind("previous","Number of contacts performed before this campaign and for this client")
+a15=cbind("poutcome","Outcome of the previous marketing campaign")
+a16=cbind("y","Whether the surveyed client has subscribed a term deposit?")
+data_description=data.frame(rbind(a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15,a16))
+colnames(data_description)<-c("variable","description")
+data_description%>%
+  kbl(caption = "Data Description")%>%
+  kable_classic(full_width=F)
+```
+
+## Data Pre-processing and Data Cleaning
+## First I will split the dataset into two parts, the training set (80%) and the test set(20%). A portion of the      sample is used for training and a portion of the sample is used for testing. Then, I need to check this           dataset for missing values and outliers. 
+```{r}
+library(VIM) 
+data=read.csv("/Users/liangdameinv/Desktop/541/bank-full.csv")
+aggr(data,prop=F,numbers=T)
+data$y[which(data$y=="yes")]=1##To facilitate the analysis, I note those who subscribed to the term deposit product as 1 and those who refused to subscribe as 0 to explore whether the data are balanced.
+data$y[which(data$y=="no")]=0
+data$y=as.numeric(data$y)
+hist(data$y,main="Situation of Clients Subscribe the Term Deposit Product",xlab="subscribe or not")
+n=length(which(data$y==1))
+n0=length(which(data$y==0))
+y_1=data[which(data$y==1),]
+y_0=data[which(data$y==0),]
+sub1=sample(nrow(y_0),n)
+data_set_0=y_0[sub1,]
+data_set_1=data[which(data$y==1),]
+data_set_balanced=rbind(data_set_0,data_set_1)
+hist(data_set_balanced$y,main="Adjusted training dataset",xlab="subscribe or not")## balanced
+
+set.seed(123)
+nn=0.8
+sub=sample(1:nrow(data_set_balanced),round(nrow(data_set_balanced)*nn))
+new_train=data_set_balanced[sub,]
+new_test=data_set_balanced[-sub,]
+nrow(new_train)
+nrow(new_test)
+
+library(plyr)
+library(psych)
+new_train$job <- plyr::mapvalues(factor(new_train$job), 
+                         from = levels(factor(new_train$job)),
+                         to = 1:length(levels(factor(new_train$job))))
+new_train$job=as.numeric(new_train$job)
+new_train$marital <- plyr::mapvalues(factor(new_train$marital), 
+                         from = levels(factor(new_train$marital)),
+                         to = 1:length(levels(factor(new_train$marital))))
+new_train$marital=as.numeric(new_train$marital)
+new_train$education <- plyr::mapvalues(factor(new_train$education), 
+                         from = levels(factor(new_train$education)),
+                         to = 1:length(levels(factor(new_train$education))))
+new_train$education=as.numeric(new_train$education)
+new_train$default <- plyr::mapvalues(factor(new_train$default), 
+                         from = levels(factor(new_train$default)),
+                         to = 1:length(levels(factor(new_train$default))))
+new_train$default=as.numeric(new_train$default)
+new_train$housing <- plyr::mapvalues(factor(new_train$housing), 
+                         from = levels(factor(new_train$housing)),
+                         to = 1:length(levels(factor(new_train$housing))))
+new_train$housing=as.numeric(new_train$housing)
+new_train$loan <- plyr::mapvalues(factor(new_train$loan), 
+                         from = levels(factor(new_train$loan)),
+                         to = 1:length(levels(factor(new_train$loan))))
+new_train$loan=as.numeric(new_train$loan)
+new_train$contact <- plyr::mapvalues(factor(new_train$contact), 
+                         from = levels(factor(new_train$contact)),
+                         to = 1:length(levels(factor(new_train$contact))))
+new_train$contact=as.numeric(new_train$contact)
+new_train$month <- plyr::mapvalues(factor(new_train$month), 
+                         from = levels(factor(new_train$month)),
+                         to = 1:length(levels(factor(new_train$month))))
+new_train$month=as.numeric(new_train$month)
+new_train$poutcome<- plyr::mapvalues(factor(new_train$poutcome), 
+                         from = levels(factor(new_train$poutcome)),
+                         to = 1:length(levels(factor(new_train$poutcome))))
+new_train$poutcome=as.numeric(new_train$poutcome)
+
+
+
+new_test$job <- plyr::mapvalues(factor(new_test$job), 
+                         from = levels(factor(new_test$job)),
+                         to = 1:length(levels(factor(new_test$job))))
+new_test$job=as.numeric(new_test$job)
+new_test$marital <- plyr::mapvalues(factor(new_test$marital), 
+                         from = levels(factor(new_test$marital)),
+                         to = 1:length(levels(factor(new_test$marital))))
+new_test$marital=as.numeric(new_test$marital)
+new_test$education <- plyr::mapvalues(factor(new_test$education), 
+                         from = levels(factor(new_test$education)),
+                         to = 1:length(levels(factor(new_test$education))))
+new_test$education=as.numeric(new_test$education)
+new_test$default <- plyr::mapvalues(factor(new_test$default), 
+                         from = levels(factor(new_test$default)),
+                         to = 1:length(levels(factor(new_test$default))))
+new_test$default=as.numeric(new_test$default)
+new_test$housing <- plyr::mapvalues(factor(new_test$housing), 
+                         from = levels(factor(new_test$housing)),
+                         to = 1:length(levels(factor(new_test$housing))))
+new_test$housing=as.numeric(new_test$housing)
+new_test$loan <- plyr::mapvalues(factor(new_test$loan), 
+                         from = levels(factor(new_test$loan)),
+                         to = 1:length(levels(factor(new_test$loan))))
+new_test$loan=as.numeric(new_test$loan)
+new_test$contact <- plyr::mapvalues(factor(new_test$contact), 
+                         from = levels(factor(new_test$contact)),
+                         to = 1:length(levels(factor(new_test$contact))))
+new_test$contact=as.numeric(new_test$contact)
+new_test$month <- plyr::mapvalues(factor(new_test$month), 
+                         from = levels(factor(new_test$month)),
+                         to = 1:length(levels(factor(new_test$month))))
+new_test$month=as.numeric(new_test$month)
+new_test$poutcome<- plyr::mapvalues(factor(new_test$poutcome), 
+                         from = levels(factor(new_test$poutcome)),
+                         to = 1:length(levels(factor(new_test$poutcome))))
+new_test$poutcome=as.numeric(new_test$poutcome)
+
+```
+
+
+## Description of Methods
+# Logistic regression
+# Discriminant analysis
+
+```{r}
+library(ROCR)
+model1=glm(y~.,data = new_train,family = 'binomial')
+summary(model1)
+a=c( 
+ '0.202', 
+ '0.00262' ,
+' 0.18881',    
+'7.90e-08', 
+ '1.80e-08', 
+'0.06861',   
+ '0.05367',  
+ '< 2e-16', 
+  '2.58e-14', 
+ '< 2e-16', 
+ '6.19e-06', 
+  '< 2e-16',
+ '< 2e-16', 
+  '7.03e-16',
+ '< 2e-16', 
+'2.74e-07' )
+test_for_cof=cbind(model1$coefficients,a)
+colnames(test_for_cof)<-c('coefficients','p value')
+test_for_cof%>%
+  kbl(caption = "Logistic regression model coefficients")%>%
+  kable_classic(full_width=F)
+
+x_for_model=cbind(new_train$age,new_train$marital,new_train$education,new_train$housing,new_train$loan,new_train$contact,new_train$month,new_train$duration,new_train$campaign,new_train$pdays,new_train$previous,new_train$poutcome)
+pc=principal(cor(x_for_model),12,rotate="varimax")
+pc
+
+model2=glm(y~age+previous+marital+education+housing+loan+contact+month+duration,data=new_train,family='binomial')
+y_true=new_test$y
+y_pro=predict(model2,newdata=new_test,type="response")
+pred=prediction(y_pro,new_test$y)
+perf=performance(pred,measure="tpr",x.measure="fpr")
+plot(perf)
+auc=performance(pred,measure = "auc")
+auc=auc@y.values[[1]]
+auc
+
+accu=table(y_predict,new_test$y)
+sum(diag(accu))/sum(accu)
+
+```
+
+
+## cluster analysis
+## Then i will use discriminant analysis to determine whether clients will subscribe the term deposit product.
+```{r}
+library(class)
+res <- knn(new_train[,1:15], new_test[,1:15], cl = new_train$y)
+table1=table(new_test$y, res)  
+sum(diag(table(new_test$y, res)))/sum(table(new_test$y, res))
+table1%>%
+  kbl(caption = "Distance discrimination")%>%
+  kable_classic(full_width=F)
+
+library(klaR) 
+new_train$y=as.factor(new_train$y)
+res1 <- NaiveBayes(y ~., data = new_train)
+pre1 <- predict(res1, newdata = new_test[,1:15])
+table2=table(new_test$y, pre1$class)  # 生成实际与预测交叉表
+sum(diag(table(new_test$y, pre1$class))) / sum(table(new_test$y, pre1$class))
+table2%>%
+  kbl(caption = "Bayesian discrimination")%>%
+  kable_classic(full_width=F)
+```
+
+```{r}
+library(randomForest)
+model3=randomForest(y~.,new_train)
+y3_predict=predict(model3,new_test)
+y3_predict=as.numeric(y3_predict)-1
+m1=length(which(y3_predict[which(y_true==0)]-y_true[which(y_true==0)]==0)==TRUE)
+n1=length(which(y3_predict[which(y_true==1)]-y_true[which(y_true==1)]==0)==TRUE)
+print(c(m1,n1))
+length(which(y_true==0))-m1
+length(which(y_true==1))-n1
+
+a1=cbind("837","200")
+a2=cbind("119","960")
+data_description=data.frame(rbind(a1,a2))
+colnames(data_description)<-c("0","1")
+rownames(data_description)<-c("0","1")
+data_description%>%
+  kbl(caption = "Prediction Precision of decision tree")%>%
+  kable_classic(full_width=F)
+
+(837+960)/(837+200+119+960)
+
+```
+
+```{r}
+# if not dealing with the unbalanced data
+data1=read.csv("/Users/liangdameinv/Desktop/541/bank-full.csv")
+data1$y[which(data1$y=="yes")]<-1
+data1$y[which(data1$y=="no")]<-0
+data1$y=as.numeric(data1$y)
+n11=length(which(data1$y==1))
+n10=length(which(data1$y==0))
+y_11=data1[which(data1$y==1),]
+y_10=data1[which(data1$y==0),]
+set.seed(123)
+nn=0.8
+sub0=sample(1:nrow(y_10),round(nrow(y_10)*nn))
+train0=y_10[sub0,]
+test0=y_10[-sub0,]
+sub1=sample(1:nrow(y_11),round(nrow(y_11)*nn))
+train1=y_11[sub1,]
+test1=y_11[-sub1,]
+new_train=rbind(train0,train1)
+new_test=rbind(test0,test1)
+
+
+library(plyr)
+library(psych)
+new_train$job <- plyr::mapvalues(factor(new_train$job), 
+                         from = levels(factor(new_train$job)),
+                         to = 1:length(levels(factor(new_train$job))))
+new_train$job=as.numeric(new_train$job)
+new_train$marital <- plyr::mapvalues(factor(new_train$marital), 
+                         from = levels(factor(new_train$marital)),
+                         to = 1:length(levels(factor(new_train$marital))))
+new_train$marital=as.numeric(new_train$marital)
+new_train$education <- plyr::mapvalues(factor(new_train$education), 
+                         from = levels(factor(new_train$education)),
+                         to = 1:length(levels(factor(new_train$education))))
+new_train$education=as.numeric(new_train$education)
+new_train$default <- plyr::mapvalues(factor(new_train$default), 
+                         from = levels(factor(new_train$default)),
+                         to = 1:length(levels(factor(new_train$default))))
+new_train$default=as.numeric(new_train$default)
+new_train$housing <- plyr::mapvalues(factor(new_train$housing), 
+                         from = levels(factor(new_train$housing)),
+                         to = 1:length(levels(factor(new_train$housing))))
+new_train$housing=as.numeric(new_train$housing)
+new_train$loan <- plyr::mapvalues(factor(new_train$loan), 
+                         from = levels(factor(new_train$loan)),
+                         to = 1:length(levels(factor(new_train$loan))))
+new_train$loan=as.numeric(new_train$loan)
+new_train$contact <- plyr::mapvalues(factor(new_train$contact), 
+                         from = levels(factor(new_train$contact)),
+                         to = 1:length(levels(factor(new_train$contact))))
+new_train$contact=as.numeric(new_train$contact)
+new_train$month <- plyr::mapvalues(factor(new_train$month), 
+                         from = levels(factor(new_train$month)),
+                         to = 1:length(levels(factor(new_train$month))))
+new_train$month=as.numeric(new_train$month)
+new_train$poutcome<- plyr::mapvalues(factor(new_train$poutcome), 
+                         from = levels(factor(new_train$poutcome)),
+                         to = 1:length(levels(factor(new_train$poutcome))))
+new_train$poutcome=as.numeric(new_train$poutcome)
+
+
+
+new_test$job <- plyr::mapvalues(factor(new_test$job), 
+                         from = levels(factor(new_test$job)),
+                         to = 1:length(levels(factor(new_test$job))))
+new_test$job=as.numeric(new_test$job)
+new_test$marital <- plyr::mapvalues(factor(new_test$marital), 
+                         from = levels(factor(new_test$marital)),
+                         to = 1:length(levels(factor(new_test$marital))))
+new_test$marital=as.numeric(new_test$marital)
+new_test$education <- plyr::mapvalues(factor(new_test$education), 
+                         from = levels(factor(new_test$education)),
+                         to = 1:length(levels(factor(new_test$education))))
+new_test$education=as.numeric(new_test$education)
+new_test$default <- plyr::mapvalues(factor(new_test$default), 
+                         from = levels(factor(new_test$default)),
+                         to = 1:length(levels(factor(new_test$default))))
+new_test$default=as.numeric(new_test$default)
+new_test$housing <- plyr::mapvalues(factor(new_test$housing), 
+                         from = levels(factor(new_test$housing)),
+                         to = 1:length(levels(factor(new_test$housing))))
+new_test$housing=as.numeric(new_test$housing)
+new_test$loan <- plyr::mapvalues(factor(new_test$loan), 
+                         from = levels(factor(new_test$loan)),
+                         to = 1:length(levels(factor(new_test$loan))))
+new_test$loan=as.numeric(new_test$loan)
+new_test$contact <- plyr::mapvalues(factor(new_test$contact), 
+                         from = levels(factor(new_test$contact)),
+                         to = 1:length(levels(factor(new_test$contact))))
+new_test$contact=as.numeric(new_test$contact)
+new_test$month <- plyr::mapvalues(factor(new_test$month), 
+                         from = levels(factor(new_test$month)),
+                         to = 1:length(levels(factor(new_test$month))))
+new_test$month=as.numeric(new_test$month)
+new_test$poutcome<- plyr::mapvalues(factor(new_test$poutcome), 
+                         from = levels(factor(new_test$poutcome)),
+                         to = 1:length(levels(factor(new_test$poutcome))))
+new_test$poutcome=as.numeric(new_test$poutcome)
+
+library(ROCR)
+model11=glm(y~.,data = new_train,family = 'binomial')
+summary(model11)
+x_for_model=cbind(new_train$age,new_train$job,new_train$marital,new_train$education,new_train$balance,new_train$housing,new_train$loan,new_train$contact,new_train$month,new_train$duration,new_train$campaign,new_train$pdays,new_train$previous,new_train$poutcome)
+pc=principal(cor(x_for_model),14,rotate="varimax")
+pc
+
+model12=glm(y~age+job+previous+marital+education+balance+housing+loan+contact+month+duration,data=new_train,family='binomial')
+y_true=new_test$y
+y_pro=predict(model12,newdata=new_test,type="response")
+pred=prediction(y_pro,new_test$y)
+perf=performance(pred,measure="tpr",x.measure="fpr")
+plot(perf)
+auc=performance(pred,measure = "auc")
+auc=auc@y.values[[1]]
+auc
+
+library(class)
+res <- knn(new_train[,1:15], new_test[,1:15], cl = new_train$y)
+table1=table(new_test$y, res)  
+sum(diag(table(new_test$y, res)))/sum(table(new_test$y, res))
+table1%>%
+  kbl(caption = "Distance discrimination")%>%
+  kable_classic(full_width=F)
+
+
+
+library(klaR) 
+new_train$y=as.factor(new_train$y)
+res1 <- NaiveBayes(y ~., data = new_train)
+pre1 <- predict(res1, newdata = new_test[,1:15])
+table2=table(new_test$y, pre1$class)  # 生成实际与预测交叉表
+sum(diag(table(new_test$y, pre1$class))) / sum(table(new_test$y, pre1$class))
+table2%>%
+  kbl(caption = "Bayesian discrimination")%>%
+  kable_classic(full_width=F)
+
+
+library(randomForest)
+model13=randomForest(y~.,new_train)
+y3_predict=predict(model13,new_test)
+y3_predict=as.numeric(y3_predict)-1
+y_true=new_test$y
+m1=length(which(y3_predict[which(y_true==0)]-y_true[which(y_true==0)]==0)==TRUE)
+n1=length(which(y3_predict[which(y_true==1)]-y_true[which(y_true==1)]==0)==TRUE)
+print(c(m1,n1))
+length(which(y_true==0))-m1
+length(which(y_true==1))-n1
+
+a1=cbind("7792","192")
+a2=cbind("695","363")
+data_description=data.frame(rbind(a1,a2))
+colnames(data_description)<-c("0","1")
+rownames(data_description)<-c("0","1")
+data_description%>%
+  kbl(caption = "Prediction Precision of decision tree")%>%
+  kable_classic(full_width=F)
+
+(7792+363)/(7792+192+695+363)
+
+```
