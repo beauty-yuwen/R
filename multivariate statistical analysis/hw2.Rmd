@@ -1,0 +1,471 @@
+---
+title: "541hw2"
+output: pdf_document
+date: "2023-01-28"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem 1 a,b
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/541/CASchools.csv")
+A=cov(data[,2:11])
+variance=c(rep(0,10))
+for(i in 1:10)
+  variance[i]=eigen(A)$values[i]/sum(eigen(A)$values)
+plot(variance/sum(eigen(A)$values),main="percentage of variance explained by the principle components against the index of the principle component")
+```
+## According to the plot, I think there is only two factors that can be kept for describing the variation in the dataset.Because the level of explanation of the remaining factors is almost zero.
+
+## Problem 1 c
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/541/CASchools.csv")
+A=cov(data[,2:11])
+plot(c(1:10),eigen(A)$vectors[,1])
+par(new=TRUE)
+points(c(1:10),eigen(A)$vectors[,2],col="red")
+par(new=TRUE)
+points(c(1:10),eigen(A)$vectors[,3],col="blue")
+```
+## The plot shows that the first pinciple component explains the data most.
+
+## Problem 1 d
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/541/CASchools.csv")
+A=cov(data[,2:11])
+B=c(rep(0,10))
+for(i in 1:10)
+  B[i]=sd(data[,i+1])
+plot(B,eigen(A)$vectors[,1])
+```
+## According to the plot, we mapped the data to a one-dimensional space.
+
+## Problem 1 e
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/541/CASchools.csv")
+A=cov(data[,2:11])
+projection_1 = as.matrix(data[,2:11])%*%eigen(A)$vectors[,1]
+projection_2= as.matrix(data[,2:11])%*%eigen(A)$vectors[,2]
+projection_3= as.matrix(data[,2:11])%*%eigen(A)$vectors[,3]
+plot(projection_2~projection_1,main="PC Plot 1", xlab="Projection onto PC 1",ylab="Projection onto PC 2")
+plot(projection_3~projection_1,main="PC Plot 2", xlab="Projection onto PC 1",ylab="Projection onto PC 3")
+plot(projection_3~projection_2,main="PC Plot 3", xlab="Projection onto PC 2",ylab="Projection onto PC 3")
+```
+## According to the three plots, the three principle components are uncorrelated.
+
+## Problem 2 a
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/541/Hitters.csv")
+A=cov(data[,2:14])
+variance=c(rep(0,13))
+for(i in 1:13)
+  variance[i]=eigen(A)$values[i]/sum(eigen(A)$values)
+variance
+plot(variance/sum(eigen(A)$values),main="percentage of variance explained by the principle components against the index of the principle component")
+```
+## According to the plot, there is only one principle component that can describe at least 99% of the variance in the data.
+
+## Problem 2 b
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/541/Hitters.csv")
+B=c(rep(0,13))
+for(i in 1:13)
+  B[i]=sd(data[,i+1])
+plot(B,abs(eigen(A)$vectors[,1]))
+```
+## According to the plot, we mapped the data to a one-dimensional space
+
+## Problem 2 c
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/541/Hitters.csv")
+newdata=scale(data[,2:14])
+C=cor(newdata)
+variance1=c(rep(0,13))
+for(i in 1:13)
+  variance1[i]=eigen(C)$values[i]/sum(eigen(C)$values)
+variance1
+plot(variance1/sum(eigen(C)$values),main="percentage of variance explained by the principle components against the index of the principle component")
+```
+## There are not principle components can describe at leat 99% of the variation in the data.I would like to keep 4 principle components in order to understand the variation in the data.
+
+## Problem 2 d
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/541/Hitters.csv")
+A=cov(data[,2:14])
+D=c(rep(0,13))
+for(i in 1:13)
+  D[i]=sd(as.matrix(data[,i+1]))
+plot(D,abs(eigen(A)$vectors[,1]),xlab = "standard deviation",ylab="first principle component" )
+plot(D,abs(eigen(A)$vectors[,2]),xlab = "standard deviation",ylab="second principle component")
+plot(D,abs(eigen(A)$vectors[,3]),xlab = "standard deviation",ylab="third principle component")
+plot(D,abs(eigen(A)$vectors[,4]),xlab = "standard deviation",ylab="fourth principle component")
+```
+## The first principle component explain the variation best.
+
+## Problem 2 e 
+
+##The normalized data contains more principal components that can explain the variance, and the variance can be explained more comprehensively with the standardized data.
+
+## Problem 3 a b
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/541/Artificial1.csv")
+A=cov(data[,2:11])
+variance=c(rep(0,10))
+for(i in 1:10)
+  variance[i]=eigen(A)$values[i]/sum(eigen(A)$values)
+plot(variance/sum(eigen(A)$values),main="percentage of variance explained by the principle components against the index of the principle component")
+projection= as.matrix(data[,2:11])%*%eigen(A)$vectors
+projection_1 = as.matrix(data[,2:11])%*%eigen(A)$vectors[,1]
+projection_2= as.matrix(data[,2:11])%*%eigen(A)$vectors[,2]
+plot(projection_2~projection_1,main="PC Plot 1", xlab="Projection onto PC 1",ylab="Projection onto PC 2")
+newdata=scale(data[,2:11])
+B=cor(newdata)
+variance1=c(rep(0,10))
+for(i in 1:10)
+  variance1[i]=scale(eigen(B)$values[i]/sum(eigen(B)$values))
+projectionx= as.matrix(newdata)%*%scale(eigen(B)$vectors)
+projection1 = as.matrix(newdata)%*%scale(eigen(B)$vectors[,1])
+projection2= as.matrix(newdata)%*%scale(eigen(B)$vectors[,2])
+plot(projection2~projection1,main="PC Plot 1", xlab="Projection onto PC 1",ylab="Projection onto PC 2")
+```
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/541/Artificial2.csv")
+A=cov(data[,2:51])
+variance=c(rep(0,50))
+for(i in 1:50)
+  variance[i]=eigen(A)$values[i]/sum(eigen(A)$values)
+plot(variance/sum(eigen(A)$values),main="percentage of variance explained by the principle components against the index of the principle component")
+projection= as.matrix(data[,2:51])%*%eigen(A)$vectors
+projection_1 = as.matrix(data[,2:51])%*%eigen(A)$vectors[,1]
+projection_2= as.matrix(data[,2:51])%*%eigen(A)$vectors[,2]
+plot(projection_2~projection_1,main="PC Plot 1", xlab="Projection onto PC 1",ylab="Projection onto PC 2")
+newdata=scale(data[,2:51])
+B=cor(newdata)
+variance1=c(rep(0,50))
+for(i in 1:50)
+  variance1[i]=scale(eigen(B)$values[i]/sum(eigen(B)$values))
+projectionx= as.matrix(newdata)%*%(eigen(B)$vectors)
+projection1 = as.matrix(newdata)%*%(eigen(B)$vectors[,1])
+projection2= as.matrix(newdata)%*%(eigen(B)$vectors[,2])
+plot(projection2~projection1,main="PC Plot 1", xlab="Projection onto PC 1",ylab="Projection onto PC 2")
+```
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/541/penguins.csv")
+A=cov(data[,2:26])
+variance=c(rep(0,25))
+for(i in 1:25)
+  variance[i]=eigen(A)$values[i]/sum(eigen(A)$values)
+plot(variance/sum(eigen(A)$values),main="percentage of variance explained by the principle components against the index of the principle component")
+projection= as.matrix(data[,2:26])%*%eigen(A)$vectors
+projection_1 = as.matrix(data[,2:26])%*%eigen(A)$vectors[,1]
+projection_2= as.matrix(data[,2:26])%*%eigen(A)$vectors[,2]
+plot(projection_2~projection_1,main="PC Plot 1", xlab="Projection onto PC 1",ylab="Projection onto PC 2")
+newdata=scale(data[,2:26])
+B=cor(newdata)
+variance1=c(rep(0,25))
+for(i in 1:25)
+  variance1[i]=scale(eigen(B)$values[i]/sum(eigen(B)$values))
+projectionx= as.matrix(newdata)%*%scale(eigen(B)$vectors)
+projection1 = as.matrix(newdata)%*%scale(eigen(B)$vectors[,1])
+projection2= as.matrix(newdata)%*%scale(eigen(B)$vectors[,2])
+plot(projection2~projection1,main="PC Plot 1", xlab="Projection onto PC 1",ylab="Projection onto PC 2")
+```
+## Problem 3 c
+## The effect of principal component analysis for high-dimensional data is not obvious. I prefer to use the plot of the percentage of variance explained by the principle components. Because, it is obvious for us to decide how many principle components should be kept.
+
+## Problem 4 
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/541/College.csv")
+X=as.matrix(data[,2:16])
+V=eigen(t(X)%*%(X))$vectors
+P=X%*%V
+lambda=eigen(t(X)%*%(X))$values
+U=eigen(X%*%t(X))$vectors
+Q=t(X)%*%U
+mu=eigen(X%*%t(X))$values[1:15]
+A=svd(X)$u
+B=svd(X)$v
+gama=svd(X)$d
+R=X%*%B
+S=t(X)%*%A
+gama2=gama^2
+```
+
+## Problem 4 a
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/541/College.csv")
+X=as.matrix(data[,2:16])
+V=eigen(t(X)%*%(X))$vectors
+P=X%*%V
+lambda=eigen(t(X)%*%(X))$values
+U=eigen(X%*%t(X))$vectors
+Q=t(X)%*%U
+mu=eigen(X%*%t(X))$values[1:15]
+A=svd(X)$u
+B=svd(X)$v
+gama=svd(X)$d
+R=X%*%B
+S=t(X)%*%A
+gama2=gama^2
+all.equal(lambda,mu)
+all.equal(lambda,gama2)
+```
+
+## Problem 4 b
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/541/College.csv")
+X=as.matrix(data[,2:16])
+V=eigen(t(X)%*%(X))$vectors
+P=X%*%V
+lambda=eigen(t(X)%*%(X))$values
+U=eigen(X%*%t(X))$vectors
+Q=t(X)%*%U
+mu=eigen(X%*%t(X))$values[1:15]
+A=svd(X)$u
+B=svd(X)$v
+gama=svd(X)$d
+R=X%*%B
+S=t(X)%*%A
+gama2=gama^2
+a=0
+for(i in 1:15)
+  {m=cbind(U[,i],R[,i],A[,i],P[,i])
+  n=cbind(A[,i],R[,i],P[,i])
+  if(qr(m)$rank==qr(n)$rank)
+    a=a+1}
+a
+a=0
+for(i in 1:15)
+  {m=cbind(U[,i],R[,i],A[,i],P[,i])
+  n=cbind(U[,i],P[,i],A[,i])
+  if(qr(m)$rank==qr(n)$rank)
+    a=a+1}
+a
+a=0
+for(i in 1:15)
+  {m=cbind(U[,i],R[,i],A[,i],P[,i])
+  n=cbind(U[,i],P[,i],R[,i])
+  if(qr(m)$rank==qr(n)$rank)
+    a=a+1}
+a
+a=0
+for(i in 1:15)
+  i=1
+  {m=cbind(U[,i],R[,i],A[,i],P[,i])
+  n=cbind(A[,i],P[,i],R[,i])
+  if(qr(m)$rank==qr(n)$rank)
+    a=a+1}
+a
+X1=matrix(nrow=3,ncol=15)
+for(i in 1:15)
+  {n1=cbind(A[,i],P[,i],R[,i])
+ sol.svd <- svd(n1)
+ U1<-sol.svd$u
+ D<-sol.svd$d
+ V<-sol.svd$v
+ C<-t(U1)%*%U[,i]
+ Y<-C/D
+ X1[,i]<-V%*%Y}
+X1
+```
+## According to the result, The corresponding columns of the four matrices are linearly correlated, and the corresponding constants can be calculated.
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/541/College.csv")
+X=as.matrix(data[,2:16])
+V=eigen(t(X)%*%(X))$vectors
+P=X%*%V
+lambda=eigen(t(X)%*%(X))$values
+U=eigen(X%*%t(X))$vectors
+Q=t(X)%*%U
+mu=eigen(X%*%t(X))$values[1:15]
+A=svd(X)$u
+B=svd(X)$v
+gama=svd(X)$d
+R=X%*%B
+S=t(X)%*%A
+gama2=gama^2
+m=matrix(nrow = 777,ncol=15)
+c=c(rep(0,15))
+for(i in 1:15)
+    {m[,i]=U[,i]/P[,i]
+c[i]=unique(m[,i])}
+c
+
+m=matrix(nrow = 777,ncol=15)
+c=c(rep(0,15))
+for(i in 1:15)
+    {m[,i]=U[,i]/A[,i]
+c[i]=unique(m[,i])}
+c
+
+m=matrix(nrow = 777,ncol=15)
+c=c(rep(0,15))
+for(i in 1:15)
+    {m[,i]=U[,i]/R[,i]
+c[i]=unique(m[,i])}
+c
+
+m=matrix(nrow = 777,ncol=15)
+c=c(rep(0,15))
+for(i in 1:15)
+    {m[,i]=P[,i]/A[,i]
+c[i]=unique(m[,i])}
+c
+
+
+m=matrix(nrow = 777,ncol=15)
+c=c(rep(0,15))
+for(i in 1:15)
+    {m[,i]=P[,i]/R[,i]
+     c[i]=unique(m[,i])
+  }
+c
+
+
+m=matrix(nrow = 777,ncol=15)
+c=c(rep(0,15))
+for(i in 1:15)
+    {m[,i]=A[,i]/R[,i]
+c[i]=unique(m[,i])}
+c
+```
+## According to the result, the corresponding columns of U,P,A,R are all constant multiples of each other.
+
+## Problem 4 c
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/541/College.csv")
+X=as.matrix(data[,2:16])
+V=eigen(t(X)%*%(X))$vectors
+P=X%*%V
+lambda=eigen(t(X)%*%(X))$values
+U=eigen(X%*%t(X))$vectors
+Q=t(X)%*%U
+mu=eigen(X%*%t(X))$values[1:15]
+A=svd(X)$u
+B=svd(X)$v
+gama=svd(X)$d
+R=X%*%B
+S=t(X)%*%A
+gama2=gama^2
+b=0
+for(i in 1:15)
+  {m=cbind(V[,i],Q[,i],B[,i],S[,i])
+  n=cbind(V[,i],Q[,i],B[,i])
+  if(qr(m)$rank==qr(n)$rank)
+    b=b+1}
+b
+
+b=0
+for(i in 1:15)
+  {m=cbind(V[,i],Q[,i],B[,i],S[,i])
+  n=cbind(V[,i],Q[,i],S[,i])
+  if(qr(m)$rank==qr(n)$rank)
+    b=b+1}
+b
+
+b=0
+for(i in 1:15)
+  {m=cbind(V[,i],Q[,i],B[,i],S[,i])
+  n=cbind(V[,i],S[,i],B[,i])
+  if(qr(m)$rank==qr(n)$rank)
+    b=b+1}
+b
+
+b=0
+for(i in 1:15)
+  {m=cbind(V[,i],Q[,i],B[,i],S[,i])
+  n=cbind(S[,i],Q[,i],B[,i])
+  if(qr(m)$rank==qr(n)$rank)
+    b=b+1}
+b
+
+X2=matrix(nrow=3,ncol=15)
+for(i in 1:15)
+  {n1=cbind(S[,i],Q[,i],B[,i])
+ sol.svd <- svd(n1)
+ U1<-sol.svd$u
+ D<-sol.svd$d
+ V1<-sol.svd$v
+ C<-t(U1)%*%V[,i]
+ Y<-C/D
+ X2[,i]<-V1%*%Y}
+X2
+```
+## According to the result, The corresponding columns of the four matrices are linearly correlated, and the corresponding constants can be calculated.
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/541/College.csv")
+X=as.matrix(data[,2:16])
+V=eigen(t(X)%*%(X))$vectors
+P=X%*%V
+lambda=eigen(t(X)%*%(X))$values
+U=eigen(X%*%t(X))$vectors
+Q=t(X)%*%U
+mu=eigen(X%*%t(X))$values[1:15]
+A=svd(X)$u
+B=svd(X)$v
+gama=svd(X)$d
+R=X%*%B
+S=t(X)%*%A
+gama2=gama^2
+
+m=matrix(nrow = 15,ncol=777)
+c=c(rep(0,15))
+for(i in 1:15)
+    {m[,i]=V[,i]/Q[,i]
+c[i]=unique(m[,i])}
+c
+
+m=matrix(nrow = 15,ncol=777)
+c=c(rep(0,15))
+for(i in 1:15)
+    {m[,i]=V[,i]/B[,i]
+c[i]=unique(m[,i])}
+c
+
+m=matrix(nrow = 15,ncol=777)
+c=c(rep(0,15))
+for(i in 1:15)
+    {m[,i]=V[,i]/S[,i]
+c[i]=unique(m[,i])}
+c
+
+c=c(rep(0,15))
+for(i in 1:15)
+    {m[,i]=Q[,i]/B[,i]
+c[i]=unique(m[,i])}
+c
+
+m=matrix(nrow = 15,ncol=777)
+c=c(rep(0,15))
+for(i in 1:15)
+    {m[,i]=Q[,i]/S[,i]
+c[i]=unique(m[,i])}
+c
+
+m=matrix(nrow = 15,ncol=777)
+c=c(rep(0,15))
+for(i in 1:15)
+    {m[,i]=B[,i]/S[,i]
+c[i]=unique(m[,i])}
+c
+```
+## According to the result, the corresponding columns of U,P,A,R are all constant multiples of each other.
