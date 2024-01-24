@@ -1,0 +1,133 @@
+---
+title: "STAT 421/621 Spring 2023 - Project 2"
+author: "Dr. Kathy Ensor"
+date: "4/17/2023"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+AR-GARCH Modeling
+
+# Background
+
+Financial time series of daily returns may or may not exhibit autocorrelation in the returns themselves, but the variability in the returns as indicated by either the absolute or squared value of the daily returns will exhibit strong autocorrelation. In other words, the volatility or variance of the time series is also important to capture. The GARCH models provide one mechanism to model the volatility of the returns in addition to the returns themselves. 
+
+From an investors perspective, estimates and forecast of the volatility play an important role in pricing models, especially options written on the underlying stocks. 
+
+**DATA:** Use the `quantmod` command `quantmod::getSymbols("^DJI")` to obtain the Dow Jones Index. Note, the end date for the series is dependent on when you download (unless you set the parameters), but simply use what is automatically downloaded. 
+
+**QUESTION 0** Provide a high-level executive summary with at MOST two plots that describes the volatiity patterns observed in the Dow Jones Index, and your ability to forecast the volatility one, two and twenty days ahead (3 distinct time points). 
+
+#This report analyzes and evaluates the previous and current adjusted closing price returns of the Dow Jones Index. First take the logarithm of the return. Because . The log of the price is often modeled as a random walk as there is very little measurableautocorrelation in the difference of the log price.The time series is intended to be modeled in a way that allows for the prediction of subsequent price returns. In order to avoid heteroskedasticity (variance volatility) in the time series from affecting the accuracy of the model, it was decided to build an ARMA-GARCH model. After building three models and comparing their AIC values, rma(1,0)+garch(1,1) is the best among these three models. According to the return series with the modeled conditional standard deviations' plot, this event sequence does have variance volatility.The variance volatility is successfully predicted by building this model.The log returns of using this model to predict the volatility one,two and twenty days ahead are 0.0008219478,0.0006498933 and 0.0006946032. The standard deviations of using this model to predict the volatility one,two and twenty days ahead are 0.006429471, 0.006588813	and 0.007653459.
+```{r echo=FALSE}
+library(quantmod)
+library(tsibble)
+library(dplyr)
+library(ggfortify)
+library(ggplot2)
+library(xts)
+library(TSA)
+library(feasts)
+getSymbols("^DJI")
+data=DJI
+series=data$DJI.Adjusted
+
+series1=as.data.frame(series)
+series1=series1$DJI.Adjusted
+data_close_change=c(rep(0,nrow(data)))
+data_close_change[1]=0
+for(i in 2:nrow(data))
+  data_close_change[i]=log(series1[i]/series1[i-1])
+library(fGarch)
+return=ts(data_close_change)
+model3=garchFit(~arma(1,1)+garch(1,1), data=return, cond.dist ='norm')
+plot(model3,which=3)
+```
+
+**QUESTION 1** Produce the following plots
+
+    + Plot of adjusted daily closing price
+    + Plot of daily log returns based on the adjusted daily closing price
+    + ACF and PACF of log returns
+    + ACF and PACF of squared log returns
+
+```{r}
+library(quantmod)
+library(tsibble)
+library(dplyr)
+library(ggfortify)
+library(ggplot2)
+library(xts)
+library(TSA)
+library(feasts)
+getSymbols("^DJI")
+data=DJI
+series=data$DJI.Adjusted
+autoplot(series)+
+  labs(y = "adjusted daily closing price",
+       title = "Dow Jone's adjusted daily closing price")
+
+series1=as.data.frame(series)
+series1=series1$DJI.Adjusted
+data_close_change=c(rep(0,nrow(data)))
+data_close_change[1]=0
+for(i in 2:nrow(data))
+  data_close_change[i]=log(series1[i]/series1[i-1])
+autoplot(ts(data_close_change))+
+  labs(y = "log returns of adjusted daily closing price",
+       title = "log returns of adjusted daily closing price")
+acf(ts(data_close_change))
+pacf(ts(data_close_change))
+acf(ts((data_close_change)^2))
+pacf(ts((data_close_change)^2))
+```
+
+**QUESTION 2** Using the **fGarch** package, and the command **garchFit**, fit an ARMA(1,0)+GARCH(1,0) assuming a normal distribution. 
+```{r}
+library(fGarch)
+return=ts(data_close_change)
+model1=garchFit(~arma(1,0)+garch(1,0), data=return, cond.dist ='norm')
+```
+**QUESTION 3** Repeat question 2 but include a GARCH(2,0) component.
+```{r}
+model2=garchFit(~arma(1,0)+garch(2,0), data=return, cond.dist ='norm')
+```
+**QUESTION 4** Repeat question 2 but include any other model features you think might be important. You can use your judgement and do not need to go through an extensive model selection process.
+```{r}
+model3=garchFit(~arma(1,1)+garch(1,1), data=return, cond.dist ='norm')
+```
+# According to the ACF and PACF, they are not cutting the tail, so I want to fit the model with ARMA(1,1)
+**QUESTION 5** Of your 3 models, choose the one that is the best representation and justify your choice with model diagnostics. Use this model for the remaining questions.
+```{r}
+summary(model1)
+summary(model2)
+summary(model3)
+```
+#According to the AIC, arma(1,0)+garch(1,1) is the best among these three models.And it also passes the Ljung-Box Test.
+
+**QUESTION 6** Write down the model in final form. 
+$$r_t=9.3856*(1/10)^4-3.512*(1/10)^2*r_t-1+\sigma_tw_t+2.9865*(1/10)\sigma_t-1w_t-1\\
+\sigma_t^2=2.9*(1/10)^6+1.53*(1/10)^1*(r_t-1)^2+8.27*\sigma_t-1^2$$
+
+**QUESTION 7** Plot the return series with the modeled conditional standard deviations times 2 indicated. This is one of the default plots in fGarch. 
+```{r}
+fit1 = garchFit(~arma(1,1)+garch(1,1), data=return, cond.dist ='norm')
+plot(fit1,which=3)
+```
+**QUESTION 8** Produce forecasts for the next 5 days (one trading week) of both the return level and the standard deviation. 
+```{r}
+naive_sU <- qnorm(.95)*sqrt(var(return))
+naive_sL <- -qnorm(.95)*sqrt(var(return))
+predict(fit1, n.ahead =5,
+plot = TRUE,
+mse = "cond",
+conf = 0.90)
+abline(h = c(naive_sU, naive_sL), col = "purple")
+```
+**QUESTION 9** Summarize your findings assuming model is PERFECT. Comment on what the model tells you and the forecasts obtained.
+
+# This model tells us that this event sequence does have variance volatility.The variance volatility is successfully predicted by building this model.
+# According to the plot of forecast, the mean error and standard deviation, the model is a good choice for estimators.Besides, this model tells us the returns and variance in next 5 days keep comparatively flat.
