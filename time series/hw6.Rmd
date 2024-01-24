@@ -1,0 +1,20 @@
+---
+title: "621 hw6"
+output: pdf_document
+date: "2023-02-24"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem 3
+
+```{r}
+library(stats)
+arma_acf=ARMAacf(ar=c(0.4,0.45),c(1,0.25),lag.max = 20)
+arma_pacf=ARMAacf(ar=c(0.4,0.45),c(1,0.25),lag.max = 20,pacf = TRUE)
+plot(arma_acf)
+plot(arma_pacf)
+```
+## According to the plots, the ACF value is infinitely close to 0 as the lag order increases and the PACF value gradually smoothes out as the lag order increases
