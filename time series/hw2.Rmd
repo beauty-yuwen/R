@@ -1,0 +1,75 @@
+---
+title: "621 hw2"
+output: pdf_document
+date: "2023-01-24"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem 2
+
+```{r echo=FALSE}
+library(astsa)
+data=globtemp
+plot(data)
+lines(ksmooth(time(data),data,"normal",bandwidth = 3),lwd=3,col=4)
+par(fig=c(.5,1,.5,1),new=TRUE)
+gauss=function(x){1/sqrt(2*pi)*exp(-(x^2)/2)}
+x=seq(from=-3,to=3,by=0.001)
+plot(x,gauss(x),type="l",ylim=c(-.47,.47),xtat="n",ann=FALSE)
+```
+
+```{r echo=FALSE}
+library(astsa)
+data=globtemp
+plot(data)
+lines(lowess(data, f=.05), lwd=2, col=4)
+lines(lowess(data), lty=2, lwd=2, col=2)
+```
+## According to the figures, global temperatures are trending upward and are warming at an increasing rate.
+
+
+## Problem 3
+
+```{r echo=FALSE}
+fit = lm(soi~time(soi), na.action=NULL)
+par(mfrow=c(1, 1))
+plot(resid(fit), type='o', main="Detrended")
+lines(fitted(fit), col=2)
+lines(lowess(soi, f=.05), lwd=2, col=4)
+stats::spec.pgram(soi,
+                  fast=FALSE,
+                  spans=10,
+                  dmean=TRUE,
+                  detrend=TRUE,
+                  plot=TRUE)
+```
+## According to the figure, there is a decreasing trend in the sea surface temperature.The less obvious one at the frequency of one cycle every 2 months.
+
+
+## Problem 4
+
+```{r pressure, echo=FALSE}
+library(fpp3)
+library(astsa)
+data <- aus_production
+beer=data.frame(data$Quarter,data$Beer)
+beer.ts <- ts(beer, frequency = 4, start = c(1956,1), end = c(2010,2))
+plot.ts(beer.ts[,2], main = "Monthly Beer Production in Australia", xlab = "Year", ylab = "ML")
+acf(beer.ts[,2])
+pacf(beer.ts[,2])
+fit = lm(beer.ts[,2]~time(beer.ts[,2]), na.action=NULL)
+par(mfrow=c(1, 1))
+plot(resid(fit), type='o', main="Detrended")
+lines(fitted(fit), col=2)
+lines(lowess(beer.ts, f=.05), lwd=2, col=4)
+stats::spec.pgram(beer.ts[,2],
+                  fast=FALSE,
+                  spans=10,
+                  dmean=TRUE,
+                  detrend=TRUE,
+                  plot=TRUE)
+```
+## According to the figure, the Australian quarterly beer production has an increasing trend.
