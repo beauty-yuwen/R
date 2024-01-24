@@ -1,0 +1,17 @@
+---
+title: "621 hw4"
+output: pdf_document
+date: "2023-02-06"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem 2
+
+```{r}
+data= rnorm(100)
+x = filter(data, filter=c(1,2,1), method="convolution") [2:99]
+print(acf(x, type="correlation"))
+```
