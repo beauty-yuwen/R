@@ -13,7 +13,7 @@ When the model is more complex, solving the problem with this method has low acc
 #### Introduction to LGM(*)
 Before learning INLA, we need to know latent Gaussian model(LGM) first. It is a new kind of hierarchical model. Knowing LGM is the foundation of learning INLA. Why? In the real world, most data set can be fitted as a LGM. And INLA is the most efficient way ton solve such models. 
 #### Use Markov chain Monte Carlo approaches to approximate posterior distributions(*)
-I chose one simple dataset to do this work.
+I chose one simple dataset to do this work. This dataset is included in one R package. It is called Tokyo Rainfall Data.
 #### Introduction to INLA
 #### Use INLA to deal with the same dataset
 #### Choose a more complicated dataset to do the INLA
