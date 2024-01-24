@@ -1,0 +1,184 @@
+---
+title: "621 HW1"
+output: pdf_document
+date: "2023-01-14"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 2.10 problem 3
+## read the data into R
+```{r, echo=FALSE}
+library(fpp3)
+tute1=read.csv("/Users/liangdameinv/Desktop/tute1.csv")
+View(tute1)
+```
+## Convert the data to time series
+```{r, echo=FALSE}
+mytimeseries <- tute1 %>%
+  mutate(Quarter = yearquarter(Quarter)) %>%
+  as_tsibble(index = Quarter)
+```
+## Construct time series plots of each of the three series
+```{r, echo=FALSE}
+mytimeseries %>%
+  pivot_longer(-Quarter) %>%
+  ggplot(aes(x = Quarter, y = value, colour = name)) +
+  geom_line() +
+  facet_grid(name ~ ., scales = "free_y")
+```
+## Construct time series plots of each of the three series without 'facet'
+```{r, echo=FALSE}
+mytimeseries %>%
+  pivot_longer(-Quarter) %>%
+  ggplot(aes(x = Quarter, y = value, colour = name)) +
+  geom_line()
+```
+## 2.10 problem 4
+## Create a tsibble from us_total with year as the index and state as the key.
+```{r, echo=FALSE}
+library(USgas)
+data("us_total")
+ts = as_tsibble(us_total, key = state, index = year)
+ts
+```
+## Plot the annual natural gas consumption by state for the New England area (comprising the states of Maine, Vermont, New Hampshire, Massachusetts, Connecticut and Rhode Island).
+```{r, echo=FALSE}
+library(ggprism)
+a=which(us_total$state=="Maine")
+b=which(us_total$state=="Vermont")
+c=which(us_total$state=="New Hampshire")
+d=which(us_total$state=="Massachusetts")
+e=which(us_total$state=="Connecticut")
+f=which(us_total$state=="Rhode Island")
+p1<-ggplot(us_total[a,])+
+  geom_line(aes(year, y),size=0.8,color="red")+
+  theme_prism(palette = "candy_soft",
+              base_fontface = "plain", 
+              base_family = "serif", 
+              base_size = 16,  
+              base_line_size = 0.8, 
+              axis_text_angle = 45)
+p2<-ggplot(us_total[b,])+
+  geom_line(aes(year, y),size=0.8,color="green")+
+  theme_prism(palette = "candy_soft",
+              base_fontface = "plain", 
+              base_family = "serif", 
+              base_size = 16,  
+              base_line_size = 0.8, 
+              axis_text_angle = 45)
+p3<-ggplot(us_total[c,])+
+  geom_line(aes(year, y),size=0.8,color="pink")+
+  theme_prism(palette = "candy_soft",
+              base_fontface = "plain", 
+              base_family = "serif", 
+              base_size = 16,  
+              base_line_size = 0.8, 
+              axis_text_angle = 45)
+p4<-ggplot(us_total[d,])+
+  geom_line(aes(year, y),size=0.8,color="yellow")+
+  theme_prism(palette = "candy_soft",
+              base_fontface = "plain", 
+              base_family = "serif", 
+              base_size = 16,  
+              base_line_size = 0.8, 
+              axis_text_angle = 45)
+p5<-ggplot(us_total[e,])+
+  geom_line(aes(year, y),size=0.8,color="blue")+
+  theme_prism(palette = "candy_soft",
+              base_fontface = "plain", 
+              base_family = "serif", 
+              base_size = 16,  
+              base_line_size = 0.8, 
+              axis_text_angle = 45)
+p6<-ggplot(us_total[f,])+
+  geom_line(aes(year, y),size=0.8,color="orange")+
+  theme_prism(palette = "candy_soft",
+              base_fontface = "plain", 
+              base_family = "serif", 
+              base_size = 16,  
+              base_line_size = 0.8, 
+              axis_text_angle = 45)
+library(cowplot)
+plot_grid(p1,p2,p3,p4,p5,p6)
+
+newdata=cbind(us_total[a,],us_total[b,],us_total[c,],us_total[d,],us_total[e,],us_total[f,])
+```
+## 2.10 problem 7
+## Use autoplot(), gg_season() and gg_subseries() to compare the differences between the arrivals from these four countries.
+```{r, echo=FALSE}
+autoplot(aus_arrivals,Arrivals)+
+  labs(y = "arrivals",
+       title = "differences between arrivals from four countries")
+
+aus_arrivals%>%
+gg_season(Arrivals,labels="both")
+
+aus_arrivals%>%
+gg_subseries(Arrivals)
+```
+## 3.7 problem 1
+## Consider the GDP information in global_economy. Plot the GDP per capita for each country over time. Which country has the highest GDP per capita? How has this changed over time?
+```{r, echo=FALSE}
+global_economy %>%
+  autoplot(GDP / Population,show.legend =  FALSE) +
+  labs(title= "GDP per capita", y = "$US")
+
+global_economy %>%
+  mutate(GDP_per_capita = GDP / Population) %>%
+  filter(GDP_per_capita == max(GDP_per_capita, na.rm = TRUE)) %>%
+  select(Country, GDP_per_capita)
+
+global_economy %>%
+  filter(Country == "Monaco") %>%
+  autoplot(GDP/Population) +
+  labs(title= "GDP per capita for Monaco", y = "$US")
+```
+## Monaco has the highest GDP per capital, it has an increasing trend over time.
+
+## 3.7 problem 5
+## For the following series, find an appropriate Box-Cox transformation in order to stabilise the variance.    Tobacco from aus_production, Economy class passengers between Melbourne and Sydney from ansett, and Pedestrian counts at Southern Cross Station from pedestrian.
+```{r, echo=FALSE}
+lambda <- aus_production %>%
+  features(Tobacco, features = guerrero) %>%
+  pull(lambda_guerrero)
+aus_production %>%
+  autoplot(box_cox(Tobacco, lambda)) +
+  labs(y = "",
+       title = latex2exp::TeX(paste0(
+         "Transformed Tobacco use with $\\lambda$ = ",
+         round(lambda,2))))
+
+mel_syd <- ansett %>%
+  filter(Class == "Economy",
+         Airports == "MEL-SYD")
+lambda <- mel_syd %>%
+  features(Passengers, features = guerrero) %>%
+  pull(lambda_guerrero)
+mel_syd %>%
+  autoplot(box_cox(Passengers, lambda)) +
+  labs(y = "", title = latex2exp::TeX(paste0("Transformed Number of Passengers with $\\lambda$ = ",
+         round(lambda,2))))
+
+southern_cross <- pedestrian %>%
+  filter(Sensor == "Southern Cross Station") 
+lambda <- southern_cross %>%
+  features(Count, features = guerrero) %>%
+  pull(lambda_guerrero)
+southern_cross %>%
+  autoplot(box_cox(Count, lambda)) +
+  labs(y = "", title = latex2exp::TeX(paste0("Transformed Hourly Pedestrian Counts with $\\lambda$ = ",
+         round(lambda,2))))
+```
+## 
+```{r, echo=FALSE}
+library(astsa)
+library(xts)
+data=read.csv("/Users/liangdameinv/Desktop/google.csv")
+x = read.zoo(data, FUN=as.Date,header=TRUE, sep=',', format = "%Y/%m/%d")
+plot(as.xts(x),col=astsa.col(2:3,.7), main='Weekly Google Searches USA')
+addLegend("topleft", col=2:3, lty=1, lwd=2, bg=gray(1), bty='o', box.col=gray(1)) 
+```
+## autoplot() can not only fit ARIMA model, but also it can use the model to forecast the trend.
