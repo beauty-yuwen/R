@@ -1,0 +1,84 @@
+---
+title: "Homework #7"
+output: pdf_document
+fig_height: 5
+fig_width: 5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Instructions
+* Produce your assignment as a RMarkdown document
+  rendered to pdf (knit to pdf).
+* Also submit your Rmd file (it will not be graded but we want it for
+  reference purposes).
+* Show all the code (use `echo = TRUE` as option in R chunks) as
+well as the results.
+* 80 total points.
+* See Syllabus for HW policies.
+
+For this assignment,
+
+* For problem 1, please use the data set consumer_complaints.csv, which is available on Canvas in the Files section and then the Datasets folder, and use ggplot only. 
+
+* We have provided theme1; make sure your code uses 
+this in problem 1.
+
+* Use message=FALSE code chunk option to hide unnessary library loading messages.
+
+```{r, echo= TRUE, results='hide', message=FALSE,warning=FALSE}
+library(ggplot2)
+
+theme1 <- theme_bw() +
+  theme(axis.text = element_text(size = 8, colour = "#6b3447"),
+      axis.title = element_text(size = 10, colour = "#2f2f63"),
+      legend.title = element_text(size = 8, colour = "#2f2f63"),
+      legend.text = element_text(size = 8, colour = "#6b3447"), 
+      title = element_text(size = 12, colour = "#2f2f63"), 
+      axis.ticks = element_line(colour = "#6b3447"),
+      plot.caption = element_text(size = 8, colour = "#2f2f63"),
+      plot.subtitle = element_text(size = 10, colour = "#2f2f63"))
+```
+
+
+#### Exercise 1: [20 points]
+
+Use ggplot to create multiple density plots for the number of days to resolve each consumer complaint.  The number of days must be calculated in R and this variable will be called date_diff (date_diff will be the x in the density plot).
+
+1. Set fig.align='center',fig.height=9, fig.width=11 (3 points). 
+2. Calculate the date_diff (3 points). (Hint: use as.date, as.character, format="%m/%d/%Y", subtract date_sent_to_company and date_received)
+3. Use gaussian as the kernel (2 points).
+4. Label the x-axis "Number of Days" and Label the y-axis "Density Estimate" (2 points).
+5. Label the main title "Number of Days to Resolve Consumer Complaints" (1 point).
+6. Use facet_wrap for product and set scales="free" (3 points).
+7. Adjust the x-axis labels to 45 degrees and have a horizontal justification of 1 (Use theme and element_text) (3 points).
+8. Use scale_x_continuous with limits being from 0 to 120 (3 points)
+
+Note: The majority of the data will be concentrated around 0. Do not worry about this.
+
+
+#### Exercise 2: [20 points]
+
+For the complaint data, create a table that shows the mean days by submission method (submitted_via) using date_diff (Hint: use as.date, as.character, format="%m/%d%Y", subtract date_sent_to_company and date_received)), where the data is filtered to show only date_diff values greater than 0.  (Hint:  Use dplyr, %>% , filter, group_by, and summarise_at, knitr::kable()). See pdf for table. [5]
+
+#### Exercise 3: [20 points]
+
+For the complaint data, create a table that groups the data by year, filters the data for date_diff values greater than 0, summarises for the following below (Hint: Use dplyr,%>% ,filter, group_by, and summarise_at, knitr::kable()): See pdf for table. [7]
+
+            * Mean 
+            * Standard Error 
+            * 10% Trimmed Mean
+            * Median
+            * First Quartile
+            * Third Quartile
+            * IQR
+            * Minimum
+            * Maximum
+
+
+#### Exercise 4: [20 points]
+
+Recall what we have done in script 12 - tidy and relational data.
+Recreate table1 using table4a and table4b by using gather and a join function.
