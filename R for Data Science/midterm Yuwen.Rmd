@@ -1,0 +1,568 @@
+---
+title: "Pledged Individual Midterm"
+author: "Yuwen Liang"
+date: "2022-10-13"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem 1 Matrix and Vector Operations.
+
+
+```{r}
+X=matrix(data=c(1,1,1,5,4,3,2,3,2),ncol=3)
+y=c(1,2,3)
+```
+
+* 1. Compute $X^2$.
+
+```{r}
+X_2=X%*%X
+X_2
+```
+* 2. Compute $X^T$.
+```{r}
+X_T=t(X)
+X_T
+```
+ * 3. Compute $X^{-1}$.
+```{r}
+X_1=solve(X)
+X_1
+```
+`
+
+* 4. Compute the equation.
+```{r}
+X1=solve(t(X)%*%X)%*%t(X)%*%y
+X1
+```
+ ``
+
+* 5. Compute the equation.
+```{r}
+I=diag(1,3)
+I
+X2=solve(t(X)%*%X+I)%*%t(X)%*%y
+X2
+```
+  * 6. Take the 10th power of X using eigen-decomposition (eigen() function in R). 
+```{r}
+X=matrix(data=c(1,1,1,5,4,3,2,3,2),ncol=3)
+X.eigen=eigen(X)
+c=X.eigen$values
+c=c^10
+y=X.eigen$vectors%*%diag(c)%*%solve(X.eigen$vectors)
+y
+```
+  
+  * 7. For this problem, use sapply() to construct this matrix difference operator B. Then  compute the row-wise difference.  
+```{r}
+X=matrix(data=c(1,1,1,5,4,3,2,3,2),ncol=3)
+B=sapply(1:3,function(i)diff(diag(3)[,i]))
+B=as.matrix(B)
+B
+y=B%*%X
+y
+```
+    
+  * 8. Recover the row of the largest entry in X using the mod function. mod is %% in R.  
+```{r}
+X=matrix(data=c(1,1,1,5,4,3,2,3,2),ncol=3)
+y=X%%max(X)
+which(y==0,arr.ind=T)[1]
+```
+
+* 9. Recover the column of the largest entry in X using the mod function.  
+```{r}
+X=matrix(data=c(1,1,1,5,4,3,2,3,2),ncol=3)
+y=X%%max(X)
+which(y==0,arr.ind=T)[2]
+```
+
+## Preparation for program 2 and program 3.
+
+
+```{r}
+library(knitr)
+library(tidyverse)
+library(ggplot2)
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
+               "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+theme1 <- theme_bw() +
+  theme(axis.text = element_text(size = 8, colour = "#6b3447"),
+        axis.title = element_text(size = 10, colour = "#2f2f63"),
+        legend.title = element_text(size = 8, colour = "#2f2f63"),
+        legend.text = element_text(size = 8, colour = "#6b3447"),
+        title = element_text(size = 12, colour = "#2f2f63"),
+        axis.ticks = element_line(colour = "#6b3447"),
+        plot.caption = element_text(size = 8, colour = "#2f2f63"),
+        plot.subtitle = element_text(size = 10, colour = "#2f2f63"))
+```
+
+## Problem 2 use ggplot to get a plot.
+
+```{r}
+data_1116=read.csv('/Users/liangdameinv/Desktop/605/midterm---2.csv')
+product=unique(data_1116$product)
+ndata=aggregate(data_1116$product,by=list(data_1116$Year,data_1116$product,
+                                          data_1116$submitted_via),length)
+ndata1=data.frame(Year=ndata$Group.1,product=ndata$Group.2,submitted_via=ndata$Group.3,
+                  count=ndata$x)
+```
+
+### 1-3 answer.
+
+```{r,echo=TRUE,fig.align='center',fig.width=11,fig.height=15}
+
+p=ggplot(ndata1,aes(x=product,y=count,fill=submitted_via))+
+  geom_bar(stat='identity',position='stack')+
+  facet_wrap(.~Year,ncol=3)+theme1+
+  theme(strip.text.x=element_text(size=15))
+
+```
+
+
+### 4 answer.
+
+
+```{r,echo=TRUE,fig.align='center',fig.width=11,fig.height=15}
+
+p1=p+theme(axis.text.x=element_text(angle=90,hjust=1,size=13),
+           axis.text.y=element_text(size=13),
+           axis.title.x = element_text(size=17),
+           axis.title.y = element_text(size=17))
+
+```
+
+### 5-7 answer.
+
+```{r,echo=TRUE,fig.align='center',fig.width=11,fig.height=15}
+
+p1+labs(x='Product',y='Number of Complains')+
+  ggtitle('Number of Complaints by Product, Submission Method, and Year')+
+  theme(plot.title=element_text(size=17))+
+  scale_fill_manual(values=cbPalette)
+
+```
+
+
+## Problem 3 Use ggplot to create a bar graph for the number of complaints. 
+
+###  1 answer.
+
+```{r}
+data=read.csv("/Users/liangdameinv/Desktop/605/midterm---3.csv")
+newdata=subset(data,data$state=="CA"|data$state=="FL"|data$state=="MO"|data$state=="TX")
+new=data.frame(state=newdata$state,submitted_via=newdata$submitted_via)
+new1=aggregate(new$state,by=list(new$submitted_via,new$state),length)
+new2=data.frame(state=new1$Group.2,submitted_via=new1$Group.1,count=new1$x)
+```
+
+###  2-3 answer.
+
+```{r}
+p=ggplot(new2,aes(x=submitted_via,y=count,fill=submitted_via))
+p1=p + geom_col() +
+  guides(fill = "none") +theme1+
+  facet_wrap(~state,ncol=4, scales="free_y")+
+  theme(strip.text.x=element_text(size=15))
+
+```
+
+
+###  4 answer.
+
+```{r,echo=TRUE,fig.align='center',fig.width=11,fig.height=9}
+p1=p1+theme(axis.text.x=element_text(angle=35,hjust=1,size=13),
+         axis.text.y = element_text(size=13),
+         axis.title.x = element_text(size=17),
+         axis.title.y = element_text(size=17),
+         axis.title = element_text(size=17))
+
+```
+
+### Problem 3 6-8 answer.
+
+
+```{r,echo=TRUE,fig.align='center',fig.width=11,fig.height=9}
+p1+labs(x='Submission Method',y='Number of Complains')+
+  ggtitle('Number of Complaints by Submission Method and State')+
+  theme(plot.title = element_text(size=16.5)
+        )+
+  guides(fill = "none")+
+  scale_fill_manual(values=cbPalette)
+
+```
+
+
+## Problem 4  plot the densities of the mpg of the different kinds of cyl.  
+```{r,echo=TRUE,fig.align='center',fig.width=5,fig.height=5.3}
+##begin
+mdata=data.frame(mpg=mtcars$mpg,cylinders=mtcars$cyl)
+mdata$cylinders=factor(mdata$cylinders)
+m=aggregate(mtcars$mpg,by=list(mtcars$cyl),mean)
+m1=data.frame(cyl=m$Group.1,x=m$x)
+m1$cyl=factor(m1$cyl)
+p=ggplot(data=mdata, aes(x=mpg,color=cylinders)) +
+  geom_density(adjust=1.5, alpha=1,lwd=1,linetype = 1)+
+  geom_vline(data=m1,aes(xintercept=x,color=cyl),linetype='dashed',lwd=1.5)+
+  ylim(0.0,0.25)+
+  labs(x='Miles per Gallon')+
+  ggtitle("MPG Density Curves by Number of Cylinders")
+p+theme_bw() +
+  theme(legend.title = element_text(size = 12),
+        legend.text = element_text(size = 10),
+        legend.key.height=unit(1.2,'cm'),
+        legend.key.width=unit(1.2,'cm'),
+        plot.title = element_text(family = "serif",
+                                  size=14,
+                                  face='bold'))
+##end
+```
+
+## Problem 5 hypothesis testing.
+### Define the function of plot_basic
+  
+  
+
+```{r}
+plot_basic=function(x,dvalues,titlename,label){
+    plot(x,dvalues, 
+       type = "l",
+       main = titlename,
+       ylim=c(0,0.45),
+       xlim=c(0,8),
+       xlab= "x",
+       ylab="Density",
+       lwd=4) 
+  abline(h=0,lwd=2)
+  abline(v=mu0,lwd=1)
+  legend('topleft',label,title.cex = 0.5,x.intersp = 0.2)
+}
+```
+
+
+### Define the function of plot_crit
+  
+ 
+```{r}
+plot_crit=function(l,r){
+  stdev0=stdev/sqrt(n)
+  x=seq(-2,10,0.1)
+  dvalues=dnorm(x,mu0,stdev0)
+  x.p=c(x[l],x[l:r],x[r])
+  y.p=c(0,dvalues[l:r],0)
+  polygon(x.p,y.p,col="red",angle=-45,density = 10,lwd=2)
+  i3=which.min(abs(x-sample.mean))
+  segments(sample.mean,0,sample.mean,dvalues[i3],col="orange",lwd=4)
+}
+```
+  
+
+### Define the function of plot_pvalue
+ 
+
+```{r}
+plot_pvalue=function(l,r){
+    stdev0=stdev/sqrt(n)
+    x=seq(-2,10,0.1)
+    dvalues=dnorm(x,mu0,stdev0)
+    x.p=c(x[l],x[l:r],x[r])
+    y.p=c(0,dvalues[l:r],0)
+    polygon(x.p,y.p,col="orange",angle=45,density=10,lwd=2)
+}
+
+```
+  
+
+### Define the function of plot_blue
+
+  
+```{r}
+plot_blue=function(l,r){
+    x=seq(-2,10,0.1)
+    x2=seq(-2,10,0.1)
+    stdev0=stdev/sqrt(n)
+    dvalues=dnorm(x,mu0,stdev0)
+    stdev0=stdev/sqrt(n)
+    dvalues1=dnorm(x2,mu1,stdev0)
+    x.p=c(x2[l],x2[l:r],x2[r])
+    y.p=c(0,dvalues1[l:r],0)
+    polygon(x.p,y.p,col="blue")
+    lines(x,dvalues,lwd=4)
+    abline(v=mu0,lwd=1)
+}
+```
+  
+
+### Define the function of plot_alt
+
+  
+```{r}
+plot_alt=function(){
+    x2=seq(-2,10,0.1)
+    x=seq(-2,10,0.1)
+    stdev0=stdev/sqrt(n)
+    dvalues1=dnorm(x2,mu1,stdev0)
+    lines(x2,dvalues1)#density of mu1
+    abline(v=mu1,lwd=1)
+    i1=which.min(abs(x-qnorm(1-signif.level,mu0,stdev0)))
+    i4=which.min(x2)
+    i5=which.min(abs(x2-x[i1]))
+    plot_blue(i4,i5)#blue region
+}
+
+```
+
+
+### Define the function of plot_beta
+ 
+
+```{r}
+plot_beta=function(){
+  x2=seq(-2,10,0.1)
+  x=seq(-2,10,0.1)
+  stdev0=stdev/sqrt(n)
+  dvalues=dnorm(x,mu0,stdev0)
+  dvalues1=dnorm(x2,mu1,stdev0)
+  i1=which.min(abs(x-qnorm(1-signif.level,mu0,stdev0)))
+  i5=which.min(abs(x2-x[i1]))
+  plot(x2,pnorm(x2[i5],x2,stdev0),type="l",ylim=c(-0.1,1.1),xlim=c(0,8)
+         ,col="blue",lwd=3,xlab="mu1",ylab="Error type II")
+  i6=round(pnorm(x2[i5],mu1,stdev0),2)
+  text(5.8,pnorm(x2[i5],mu1,stdev0),i6)
+  abline(v=mu1)
+}
+
+```
+  
+
+### Define the function of plot_power
+  
+
+```{r}
+plot_green=function(l,r){
+    stdev0=stdev/sqrt(n)
+    x2=seq(-2,10,0.1)
+    dvalues1=dnorm(x2,mu1,stdev0)
+    x.p=c(x2[l],x2[l:r],x2[r])
+    y.p=c(0,dvalues1[l:r],0)
+    polygon(x.p,y.p,col="dark green")
+    lines(x2,dvalues1)
+    abline(v=mu1,lwd=1)
+}
+```
+  
+  
+```{r}
+plot_power=function(){
+    x2=seq(-2,10,0.1)
+    x=seq(-2,10,0.1)
+    stdev0=stdev/sqrt(n)
+    dvalues1=dnorm(x2,mu1,stdev0)
+    i1=which.min(abs(x-qnorm(1-signif.level,mu0,stdev0)))
+    i2=which.max(x)
+    i3=which.min(abs(x-sample.mean))
+    i4=which.min(x2)
+    i5=which.min(abs(x2-x[i1]))
+    i6=round(pnorm(x2[i5],mu1,stdev0),2)
+    i7=which.max(x2)
+    plot_green(i5,i7)#green region
+    plot_crit(i1,i2)#red region
+    plot_pvalue(i3,i2)#orange region
+    plot_blue(i4,i5)#blue region
+}
+
+```
+
+
+
+### Define the function of plot_error of one side
+ 
+
+```{r}
+plot_error_1=function(){
+    x2=seq(-2,10,0.1)
+    x=seq(-2,10,0.1)
+    stdev0=stdev/sqrt(n)
+    i1=which.min(abs(x-qnorm(1-signif.level,mu0,stdev0)))
+    i5=which.min(abs(x2-x[i1]))
+    plot(x2,pnorm(x2[i5],x2,stdev0),type="l",ylim=c(-0.1,1.1),xlim=c(0,8)
+     ,col="blue",lwd=3,xlab="mu1",ylab="Error type II")
+    i6=round(pnorm(x2[i5],mu1,stdev0),2)
+    text(5.9,pnorm(x2[i5],mu1,stdev0),i6)
+    abline(v=mu1)
+    lines(x2,1-pnorm(x2[i5],x2,stdev0),col="dark green",lwd=3)
+    i8=round(1-pnorm(x2[i5],mu1,stdev0),2)
+    text(6.6,1-pnorm(x2[i5],mu1,stdev0),i8)
+}
+
+```
+  
+
+### Define two side error type.
+   
+  
+  
+```{r}
+twosided_error=function(){
+x2<- seq(-2,10,0.1)
+x<-seq(-2,10,0.1)
+stdev=stdev/sqrt(n)
+dvalues <- dnorm(x,mu0,stdev)
+i1=which.min(abs(x-qnorm(1-signif.level,mu0,stdev)))
+i10=which.min(abs(x-qnorm(signif.level,mu0,stdev)))
+i5=which.min(abs(x2-x[i1]))
+i12=which.min(abs(x2-x[i10]))
+i6=round(pnorm(x2[i5],6.2,stdev)-pnorm(x2[i12],6.2,stdev),2)
+i8=round(1-pnorm(x2[i5],6.2,stdev)-pnorm(x2[i12],6.2,stdev),2)
+plot(x2,pnorm(x2[i5],x2,stdev)-pnorm(x2[i12],x2,stdev),type="l",ylim=c(-0.1,1.1),xlim=c(0,8)
+     ,col="blue",lwd=3,xlab="mu1",ylab="Error type II")
+text(5.9,pnorm(x2[i5],6.2,stdev)-pnorm(x2[i12],6.2,stdev),i6)
+abline(v=6.2)
+lines(x2,1-(pnorm(x2[i5],x2,stdev)-pnorm(x2[i12],x2,stdev)),col="dark green",lwd=3)
+text(6.6,1-pnorm(x2[i5],6.2,stdev)-pnorm(x2[i12],6.2,stdev),i8)
+}
+
+
+```
+
+
+### Define the function add_left.
+ 
+
+```{r}
+add_left=function(){
+  x<- seq(-2,10,0.1)
+  stdev0=stdev/sqrt(n)
+  dvalues <- dnorm(x,mu0,stdev0)
+  i1<- which.min(abs(x-qnorm(0.975,4,stdev0)))
+  i9=which.min(x)
+  i10=which.min(abs(x-qnorm(0.025,4,stdev0)))
+  m=2*mu0-sample.mean
+  i11=which.min(abs(x-m))
+  x5.p=c(x[i9],x[i9:i10],x[i10])
+  y5.p=c(0,dvalues[i9:i10],0)
+  segments(x[i10],0,x[i10],dvalues[i10],col="red",lwd=2)
+  polygon(x5.p,y5.p,col="red",angle=-45,density=10,lwd=2)
+  x6.p=c(x[i9],x[i9:i11],x[i11])
+  y6.p=c(0,dvalues[i9:i11],0)
+  segments(m,0,m,dvalues[i11],col="orange",lwd=2)
+  polygon(x6.p,y6.p,col="orange",angle=45,density=10,lwd=2)
+}
+
+
+```
+
+  
+
+## Define the function of plot hyp-testing
+  
+
+```{r}
+hyp.testing=function(mu0,stdev,signif.level,sample.mean,n,show_crit='n',
+                     show_pvalue='n',show_alt='n',mu1,show_beta='n',
+                     show_power='n',two_sided='n'){
+  x<- seq(-2,10,0.1)
+  stdev0=stdev/sqrt(n)
+  dvalues = dnorm(x,mu0,stdev0)
+  z=(sample.mean-mu0)/stdev0
+  if(two_sided=='n'){
+    crit=round(qnorm(1-signif.level,mu0,stdev0),2)
+    pvalue=round(1-pnorm(z),6)
+    titlename =paste('H0: mu = ',mu0,' vs H1: mu >', mu0)
+    lab1=paste("critical region sup =",crit)
+    lab2=paste("sample statistics =",sample.mean)
+    lab3=paste("p-value =",pvalue)
+    label=c(lab1,lab2,lab3)
+  }
+  else{
+    i1=which.min(abs(x-qnorm(1-signif.level,mu0,stdev0)))
+    i10=which.min(abs(x-qnorm(signif.level,mu0,stdev0)))
+    pvalue=round(2*(1-pnorm(z)),6)
+    titlename =paste('H0: mu = ',mu0,' vs H1: mu !=', mu0)
+    lab1=paste("critical region sup =",x[i1])
+    lab2=paste("critical region inf =",x[i10])
+    lab3=paste("sample statistics =",sample.mean)
+    lab4=paste("p-value =",pvalue)
+    label=c(lab1,lab2,lab3,lab4)
+  }
+  plot_basic(x,dvalues,titlename,label)
+  if(show_crit=='y'){
+    l=which.min(abs(x-qnorm(1-signif.level,mu0,stdev0)))
+    r=which.max(x)
+    plot_crit(l,r)
+  }
+  if(show_pvalue=='y'){
+    l=which.min(abs(x-sample.mean))
+    r=which.max(x)
+    plot_pvalue(l,r)
+  }
+  if(show_alt=='y'){
+    plot_alt()
+    if(show_beta=='y')
+    {plot_beta()}
+  }
+  if(show_power=='y'){
+    plot_power()
+    plot_error_1()
+  }
+  if(two_sided=='y'){
+    plot_power()
+    add_left()
+    twosided_error()
+  }
+
+}
+```
+
+
+```{r}
+mu0 <- 4 
+stdev <- 3
+signif.level <- 0.05
+sample.mean <- 6.07 
+n <- 10 
+mu1<-6.2
+```
+
+## 1. plot crit
+
+```{r}
+hyp.testing(mu0,stdev,signif.level=0.05,sample.mean,n,show_crit='y')
+
+```
+  
+## 2. plot pvalue
+
+```{r}
+hyp.testing(mu0,stdev,signif.level=0.05,sample.mean,n,show_crit='y',show_pvalue = 'y')
+```
+
+## 3. Add the error of type
+
+```{r}
+hyp.testing(mu0,stdev,signif.level=0.05,sample.mean,n,show_crit='y',show_pvalue = 'y',
+            show_alt = 'y',mu1,show_beta='y')
+```
+
+## 4. Add the power
+
+```{r}
+hyp.testing(mu0,stdev,signif.level=0.05,sample.mean,n,show_crit='y',show_pvalue = 'y',
+            show_alt = 'y',mu1,show_power = 'y')
+```
+
+
+
+## 5.Create the two-sided version
+
+```{r}
+signif.level=0.025
+hyp.testing(mu0,stdev,signif.level=0.025,sample.mean,n,mu1,two_sided = 'y')
+```
+
