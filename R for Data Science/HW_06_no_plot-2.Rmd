@@ -1,0 +1,82 @@
+---
+title: "Homework #6"
+output: pdf_document
+fig_height: 5
+fig_width: 5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Instructions
+* Produce your assignment as a RMarkdown document
+  rendered to pdf (knit to pdf).
+* Also submit your Rmd file (it will not be graded but we want it for
+  reference purposes).
+* Show all the code (use `echo = TRUE` as option in R chunks) as
+well as the results.
+* 100 total points (80 individual, 20 group).
+* See Syllabus for HW policies.
+
+#### Exercise 1: [25 points]
+
+* In class we have done the following:
+```{r, echo = TRUE, eval = TRUE}
+par(mar = c(2, 2, 2, 1),
+    mgp = c(1.1, 0.15, 0),
+    tck = -0.01)
+a <- rnorm(500)
+layout(mat = matrix(c(2, 2,
+                      1, 3), 2, byrow = TRUE),
+       widths = c(2, 1),
+       heights = c(3, 2))
+plot(a)
+hist(a)
+boxplot(a)
+```
+
+* Achieve the same result without using widths nor heights (only mat)  (Note: there is a slight difference on the results of both approaches.  So they are almost but not exactly the same).
+
+```{r}
+## Begin solution
+
+## End solution
+```
+
+#### Exercise: 2: [25 points]
+
+* Create a plot that will illustrate how confidence intervals need to be interpreted (from a frequentist approach). For that end, draw 100 samples of size 10 each from a normal distribution with population mean = 10 and population variance = 4.
+Then plot each 95% confidence interval for the mean. When constructing the intervals, you can assume the population variance is known (of course you cannot assume that the population mean is known). For plotting you can only use `plot`, `abline`, and `segments`. Your plot should look similar to the example below (see pdf) where in green are the cases that captured the true mean while in red the ones that failed. Each case has the interval and the sample mean (the dot in the middle of the interval).
+
+```{r}
+## Begin solution
+
+## End solution
+```
+
+\newpage
+
+#### Exercise: 3: [50 points]
+
+* 1. Recreate the plot below from the built in dataset 'iris' exactly as it is shown below. (25 points)
+
+```{r}
+## Begin solution
+
+## End solution
+```
+
+\newpage
+
+* 2. Now add box plots above and to the right of the graph as shown below (the title
+can be removed). Hint: You will need to reduce margins which can be done with
+the mar argument in par. (25 points)
+
+```{r}
+## Begin solution
+
+## End solution
+```
+
+
