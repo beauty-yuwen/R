@@ -1,0 +1,111 @@
+---
+title: "Homework #9"
+output: pdf_document
+fig_height: 5
+fig_width: 5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Instructions
+* Produce your assignment as a RMarkdown document
+  rendered to pdf (knit to pdf).
+* Also submit your Rmd file (it will not be graded but we want it for
+  reference purposes).
+* Show all the code (use `echo = TRUE` as option in R chunks) as
+well as the results.
+* 75 total points.
+* See Syllabus for HW policies.
+
+For this assignment, 
+
+* For problems 1-3, please use the database complaintsdata.db, which is available on Canvas in the Files section and then the Datasets folder. 
+
+* Refer to the Class SQL notes, but use something similar to the code below to get started and connect to the database. Note that this file is db and not in sql lite.
+
+
+#### Exercise 1 SQL Basics: [25]
+
+Define the variable dcon as follows (using the consumercomplaint.db database in Canvas).
+
+```{r, echo= TRUE, results='hide', message=FALSE, warning=FALSE}
+library(knitr) 
+library(RSQLite)
+dcon <- dbConnect(SQLite(), dbname = "consumercomplaint.db")
+```
+
+1. List the sql tables for dcon.  Consumer_complaints table must show, the other tables do not need to show.  (Note: Use dbListTables). (4 points)
+
+```{r, echo=TRUE, eval= TRUE,message=FALSE, warning=FALSE}
+
+```
+
+2. List the fields in the sql table consumer_complaints. (Note: Use dbListFields). (6 points)
+
+```{r, echo=TRUE, eval= TRUE,message=FALSE, warning=FALSE}
+
+```
+
+3. Create a dataframe called mydf by selecting product, sub_product, state, and ordering by Year and then Month.  Use the head function to show the first few rows of mydf.  (Note: You are using sql to select the field names).(15 points)
+
+```{r, echo=TRUE, eval= TRUE,message=FALSE, warning=FALSE}
+
+```
+
+#### Exercise 2 SQL Filtering: [25]
+
+1. Use the sql database and the consumer_complaints sql table, 
+
+   a. Select date_received, product, sub_product and filter where Year is greater than 2013.  Order by date_received, product, and sub_product.  Use head function to show first few rows. (5 points)
+   
+```{r, echo=TRUE, eval= TRUE,message=FALSE, warning=FALSE}
+
+```
+      
+   b. Select company, product and filter where state is TX and order by company and product. Use head function to show first few rows.  (5 points)
+   
+```{r, echo=TRUE, eval= TRUE,message=FALSE, warning=FALSE}
+
+```
+      
+   c. Select product, submitted_via, and filter where submitted_via is Email and order by product.  Use head function to show first few rows. (5 points)
+   
+```{r, echo=TRUE, eval=TRUE,message=FALSE, warning=FALSE}
+
+```
+   
+2. Perform the following.
+
+  a. Select product and month and filter where month is between 'A' and 'J'.  Order by product and month.  Use head function to show first few rows. Note: months should be ordered alphabetically for this assignment, not chronologically. (5 points)
+
+```{r, echo=TRUE, eval= TRUE,message=FALSE, warning=FALSE}
+
+```
+  
+  b. Select company and product and filter where state is like 'C%'.  Order by company and product.  Use head function to show first few rows. (5 points)
+  
+```{r, echo=TRUE, eval= TRUE,message=FALSE, warning=FALSE}
+
+```
+
+#### Exercise 3 Aggregrate Functions: [25]
+
+1. Use the sql database and the sql table consumer_complaints and count the number of observations for submitted_via (6 points).  Use GROUP BY submitted_via.  
+
+```{r, echo=TRUE, eval= TRUE,message=FALSE, warning=FALSE}
+
+```
+
+2. Use the sql database and the sql table consumer_complaints and count the number of observations for product and submitted_via.  (Note: Group by product and submitted_via) (8 points). 
+
+```{r, echo=TRUE, eval= TRUE,message=FALSE, warning=FALSE}
+
+```
+
+3. Use the sql database and the sql table consumer_complaints and count the number of observations for product and submitted_via based on the conditions where Year is greater than 2013, submitted_via is Web, and the state is TX. (Note: Use group by for product and submitted_via) (11 points)
+
+```{r, echo=TRUE, eval= TRUE,message=FALSE, warning=FALSE}
+
+```
