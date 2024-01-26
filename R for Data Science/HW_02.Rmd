@@ -1,0 +1,179 @@
+---
+title: "Homework #2"
+output: pdf_document
+fig_height: 5
+fig_width: 5
+---
+
+#### Instructions
+* Produce your assignment as a RMarkdown document
+  rendered to pdf (knit to pdf). See instructions in announcements if you have not downloaded a LaTeX distributor.
+If you are still having issues, you may knit to HTML as this is the first assignment.
+However, future assignments that are not knitted to pdf will be penalized.
+  
+* Also submit your Rmd file (it will not be graded but we want it for
+  reference purposes).
+* Show all the code (use `echo = TRUE` as option in R chunks) as
+well as the results.
+* 80 total points (20 points per exercise).
+* See Syllabus for HW policies.
+
+#### Exercise 1:
+* Make sure you have the library ggplot2 installed.
+If not, install it by running the uncommented code below:
+```{r, echo = TRUE}
+## install.packages("ggplot2")
+```
+
+* Run the code below to access and prepare the data:
+```{r, echo = TRUE}
+## Load the library
+library(ggplot2)
+## Activate the midwest data.frame provided by ggplot2
+data(midwest)
+## New versions of ggplot provide a tibble and have all character variables, while
+## older were data frames and had factors. Transform state to factor
+## to show how most data.frames treat character variables.
+midwest <- as.data.frame(midwest)
+midwest$state <- factor(midwest$state)
+```
+
+1. Inspect the structure of the midwest data.frame. Note the kind of data provided.
+2. Run the summary function to learn more about the variables.
+3. Get a subset of the data.frame including all counties that are not in state `MI`. No need to show the dataset here.
+4. Determine if the state variable (that is a factor) in your subset has dropped the now-removed state `MI` hint:use the table function.
+5. Devise a strategy to assure that the above factor has dropped the level that has no elements. I.e. if levels() function is used, `MI` should not show up.
+6. Further subset the data making sure that only counties with an `area` at least 0.06, `perchsd` less than or equal to 80, and EITHER `percchildbelowpovert` greater than 10 OR `percadultpoverty` greater than 10 are included. Do not show the dataset. Instead, print the dimensions.
+7. Determine how many counties per state satisfy these constraints. Only show states with at least one county.
+8. Devise a strategy to only show the state(s) with most counties (Note: your solution should also contemplate the possibility of a tie for the first place and should not include state names).
+
+```{r}
+## Begin solution
+str(midwest)
+
+summary(midwest)
+
+which(midwest$state!="MI")
+frame1=midwest[which(midwest$state!="MI"),]
+
+table(frame1$state!="MI")
+
+f=factor(frame1$state)
+fa=levels(f)
+fa
+
+frame2=frame1[which(frame1$area>=0.06&frame1$perchsd<=80&(frame1$percchildbelowpovert>=10|frame1$percadultpoverty>=10)),]
+dim(frame2)
+
+data2=frame2[,2:3]
+ct=c(rep(0,4))
+for(i in 1:4)
+  ct[i]=sum(data2$state==fa[i])
+ct
+for(i in 1:4)
+  if(ct[i]>=1)
+    print(fa[i])
+
+t=function(x){
+  k=1
+  m=x[1]
+  for(i in 2:4)
+    if(x[i]>m)
+      {m=x[i]
+      k=i}
+k
+}
+t(ct)
+## End solution
+```
+
+
+#### Exercise 2
+\
+Print the results for each problem.
+
+1. Create a list `L` that has a vector c(1,2,3) as the first element and a vector c(4,5,6) as its second element.
+2. Use subsetting to replace the 6 with a 7.
+3. Merge another vector c(6,8,9) to `L`.
+4. Devise a strategy to take the sum of the elements without explicitly subsetting them (i.e. do not use [[1]], [[2]], or [[3]]). hint: convert the list to a vector.
+
+```{r}
+## Begin solution
+c1=c(1,2,3)
+c2=c(4,5,6)
+L=list(c1,c2)
+
+l=subset(L[[2]],L[[2]]>3)
+l
+l1=replace(l,l>5,7)
+l1
+L=list(c1,l1)
+
+c3=c(6,8,9)
+L=list(c1,l1,c3)
+
+l1=L[[1]]
+l2=L[[2]]
+l3=L[[3]]
+r=rbind(l1,l2,l3)
+r1=as.matrix(r)
+r1
+a=c(rep(0,3))
+for(i in 1:3)
+  a[i]=sum(r1[i,])
+a
+## End solution
+```
+
+
+#### Exercise 3
+\
+Print the results for each problem.
+
+1. Create a 2x12 (2 rows 12 cols) matrix `M` using the built in vectors `month.abb` and `month.name`.
+2. Devise a strategy to merge the vectors in 1) with alternating indices. I.e. the vector should print "Jan" "January" "Feb" "February" etc. Hint: Use the matrix you created.
+3. Name the columns of `M` the corresponding numeric number (1 for Jan, 2 for Feb, etc.) in a single line of code.
+
+```{r}
+## Begin solution
+month.name
+m=rbind(month.abb,month.name)
+M=matrix(data=m,nrow = 2,ncol=12)
+M
+
+m1=c(rep(0,24))
+y=function(x){
+  n=1
+  for(i in 1:12)
+    {for(j in 1:2)
+      {m1[n]=x[j,i]
+      n=n+1}}
+m1
+}
+y(M)
+
+M[1,]=c(1:12)
+M
+## End solution
+```
+
+#### Exercise 4
+\
+`iris` is a built in dataset that contains information about 3 different species of iris (Use ?iris for more information).
+
+1. Print the species from highest to lowest average `Petal.Length`. Do this without ever having to manually input
+a sepal name (I.e. do not use "virginica", etc. in your code).
+2. The iris with the highest sum of `Sepal.Width` and `Petal.Length` belongs to which species? You may find it useful to use `which.max` here.
+
+```{r}
+## Begin Solution
+data3=iris
+data=aggregate(data3$Petal.Length,by=list(data3$Species),FUN =mean )
+data1=data[order(-data$x),]
+data1
+
+data3[which.max(data3$Sepal.Width+data3$Petal.Length),5]
+## End Solution
+```
+
+
