@@ -1,0 +1,112 @@
+---
+title: "Homework #3"
+output: pdf_document
+fig_height: 5
+fig_width: 5
+---
+
+#### Instructions
+* Produce your assignment as a RMarkdown document
+  rendered to pdf (knit to pdf).
+* Also submit your Rmd file (it will not be graded but we want it for
+  reference purposes).
+* Show all the code (use `echo = TRUE` as option in R chunks) as
+well as the results.
+* Make sure your code can be generalized, when applicable.
+* 100 total points.
+* See Syllabus for HW policies.
+
+#### Exercise 1 (20 points):
+* Make your own quantile-quantile plot. You will have
+  to compare the quantiles of the theoretical
+  distribution (in this case a Normal distribution with mean
+  equal the sample mean of the data and standard deviation equal the sample
+  standard deviation of the data), with your sorted data.
+  
+* Hint 1: use the `qnorm` function,
+  consulting its help for needed parameters. Of course, you cannot use `qqnorm`
+  in the code you produce, but you can use it to compare with your results.
+  
+* Hint 2: to find the theoretical quantiles, you will have to
+        create a vector of probabilities with the same number
+        of elements as your data, excluding the extremes
+        0 and 1.
+* Test it on the following data:
+
+```{r, echo = TRUE}
+set.seed(123)
+r <- rnorm(1000)
+```
+
+
+```{r, fig.align = 'center'}
+
+```
+
+#### Exercise 2 (20 points):
+* Adapt the quantile-quantile procedure
+  developed above to compare to a
+  Gamma distribution with the following data. 
+
+```{r, echo = TRUE}
+set.seed(123)
+r <- rgamma(1000, shape = 1)
+```
+  
+```{r, fig.align = 'center'}
+
+```
+
+#### Exercise 3 (20 points):
+* Using `faithful` dataset, do a stem and leaf
+ plot (`stem`), a histogram to which you will add a `rug`,
+ and a boxplot, using in all cases the variable `eruptions`.
+ Based on the data alone, does it appear normally distributed?
+ Check using a test if it can be concluded or not that
+ the eruptions are normally distributed.
+
+```{r, fig.align = 'center'}
+
+```
+
+#### Exercise 4 (40 points):
+
+```{r, message=FALSE, warning=FALSE}
+library(UsingR)
+data(father.son)
+lmfs <- lm(sheight ~ fheight, data = father.son)
+```
+
+1. Create a scatterplot of fathers heights (on x axis) and sons heights 
+(on y axis).
+
+2. Extract the coefficients of the regression line
+from lmfs, and add the regression line IN RED
+to the scatterplot (do not use abline(lmfs)).
+
+3. Plot the father heights on x and the residuals in y. 
+Add a horizontal line at 0. Why is this step important in a regression?
+
+4. Extract the tstatistic from fheight from the summary
+and perform the calculation to obtain
+the p-value
+i.e., the line that says
+fheight      0.51409    0.02705   19.01   <2e-16 ***
+Hint: use the function "pt" that gives you the 
+cumulative probability of an t distribution. Recall
+what the degrees of freedom for a t distribution is
+and where it appears in the summary (You can input the df
+manually). Additionally, think about how the p-value is actually
+calculated.
+
+5. Extract the f statistic from the summary
+and perform the calculation to obtain
+the p-value of the anova of the regression
+i.e., the line that says
+F-statistic: 361.2 on 1 and 1076 DF,  p-value: < 2.2e-16
+Hint: use the function "pf" that gives you the 
+cumulative probability of an F distribution.
+
+```{r}
+
+```
