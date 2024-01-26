@@ -1,0 +1,94 @@
+---
+title: "Untitled"
+output: html_document
+date: "2022-11-29"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r cars}
+library(RSQLite)
+dcon <- dbConnect(SQLite(), dbname = "/Users/liangdameinv/Desktop/605/youtubeData-3.db")
+dbSendQuery(conn = dcon, "
+PRAGMA foreign_keys = ON;
+")
+
+dbListTables(dcon)
+
+dbListFields(dcon, "youtubeData") 
+
+res <- dbSendQuery(conn = dcon, "
+SELECT *
+FROM youtubeData;
+")
+mydf <- dbFetch(res, -1)
+dbClearResult(res)
+
+res <- dbSendQuery(conn = dcon, "
+SELECT age, length, comments,rate,ratings,views
+FROM youtubeData;
+")
+mydf <- dbFetch(res, -1)
+dbClearResult(res)
+
+mydf=as.data.frame(mydf)
+mydf=na.omit(mydf)
+mydf2=mydf[-which(mydf$Comments<0),]
+summary(mydf2)
+```
+
+
+```{r pressure, echo=FALSE}
+rowname <- matrix(c( "Age", "Length","Views","Rate", "Ratings", "Comments"), ncol = 1)
+dd <- matrix(c(   0,  571,672,689,755,1194,0,78,184,228,281,8354406,0,367,1637,25564,7642,79897120,0,0,3,44.07,14,259683,0,3.07,4.55,3.665,4.93,5,0,1,6,60.1,21,329108 ), nrow=6, byrow = TRUE)
+d2<- cbind(rowname, dd)
+knitr::kable(d2, col.names = c("Variables","Min","1st Qu","Median","Mean","3rd Qu","Max"),
+             align='cccccc', 
+             caption = "The Summary of the Adjusted Train Set")
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r pressure, echo=FALSE}
+library(MASS)
+fullmodel=lm(mydf2$Views~mydf2$Comments+mydf2$Length+mydf2$Age+mydf2$Rate+mydf2$Ratings)
+stepmodel1 <- stepAIC(fullmodel, direction = "forward", trace=FALSE)
+summary(stepmodel1)
+fullmodel2=lm(log(1+mydf2$Views)~log(1+mydf2$Comments)+log(1+mydf2$Length)+log(1+mydf2$Age)+log(1+mydf2$Rate)+log(1+mydf2$Ratings))
+stepmodel3 <- stepAIC(fullmodel2, direction = "forward", trace=FALSE)
+summary(stepmodel3)
+
+```
+```{r pressure, echo=FALSE}
+library(MASS)
+fullmodel1=lm(mydf2$Views~mydf2$Comments+mydf2$Length+mydf2$Age+mydf2$Rate+mydf2$Ratings)
+stepmodel2 <- stepAIC(fullmodel1, direction = "backward", trace=FALSE)
+summary(stepmodel2)
+fullmodel2=lm(log(1+mydf2$Views)~log(1+mydf2$Comments)+log(1+mydf2$Length)+log(1+mydf2$Age)+log(1+mydf2$Rate)+log(1+mydf2$Ratings))
+stepmodel3 <- stepAIC(fullmodel2, direction = "backward", trace=FALSE)
+summary(stepmodel3)
+
+```
+
+```{r pressure, echo=FALSE}
+plot(stepmodel3)
+
+```
+
+```{r pressure, echo=FALSE}
+score=mydf2$Rate*mydf2$Ratings
+mydf3=cbind(mydf2,score)
+fullmodel4=lm(mydf3$Views~mydf3$Comments+mydf3$Length+mydf3$Age+mydf3$Rate+mydf3$score+mydf3$Ratings)
+stepmodel4 <- stepAIC(fullmodel4, direction = "backward", trace=FALSE)
+summary(stepmodel4)
+fullmodel5=lm(log(1+mydf3$Views)~log(1+mydf3$Age)+log(1+mydf3$Rate)+log(1+mydf3$score)+log(1+mydf3$Length)+log(1+mydf3$Comments)+log(1+mydf3$Ratings))
+stepmodel5 <- stepAIC(fullmodel5, direction = "backward", trace=FALSE)
+summary(stepmodel5)
+```
+
+```{r pressure, echo=FALSE}
+plot(stepmodel5)
+```
