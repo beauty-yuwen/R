@@ -1,0 +1,116 @@
+---
+title: "Homework #4"
+output: pdf_document
+fig_height: 5
+fig_width: 5
+---
+
+#### Instructions
+* Produce your assignment as a RMarkdown document
+  rendered to pdf (knit to pdf).
+* Also submit your Rmd file (it will not be graded but we want it for
+  reference purposes).
+* Show all the code (use `echo = TRUE` as option in R chunks) as
+well as the results.
+* 80 total points.
+* See Syllabus for HW policies.
+
+#### Exercise 1: [20 points]
+Using paste (or paste0), create the following Latex formula:  a_{1}X_{1}^0 + a_{2}X_{2}^1+ 
+  a_{3}X_{3}^2 + a_{4}X_{4}^3 + a_{5}X_{5}^4
+  
+which displayed looks like:
+  
+  $$ a_{1}X_{1}^0+a_{2}X_{2}^1+a_{3}X_{3}^2 + a_{4}X_{4}^3 + a_{5}X_{5}^4$$
+
+* Note: 
+    - only one of `paste` and `paste0` can be used. Your solution should contain vectors. No loops are allowed.
+    - You need only to produce the LaTeX formula. You do not have to display it as it appears above.
+
+```{r,echo=TRUE,include=TRUE}
+# Solution goes here:
+
+```
+
+#### Exercise 2: [20 points]
+* A bucket contains $12$ rocks: five yellow rocks and seven black rocks. If we select three rocks at random, what is the probability that exactly one yellow rock gets selected? Using classical approaches, the exact solution is:
+
+$$\frac{\binom{5}{1}\binom{7}{2}}{\binom{12}{3}}=\frac{21}{44}=0.477$$
+
+Solve the problem using three (numerical) techniques:
+
+* 1. (7 points) using a `for` loop with an `if()` clause and accumulator (Hint: The strategy is to sample 3 rocks without replacement from sample_space, 
+
+```{r,echo=TRUE,include=TRUE}
+sample_space <- c(rep("Yellow", 5), rep("Blue", 7))
+n <- 10000
+```                                                                        
+                                                          
+and count how many rocks were yellow. If only one is yellow, then this is a successful case. In this case, add 1 to the accumulator. Repeat the procedure n times. The frequentist result will be accumulator/n.
+                                                                        
+```{r,echo=TRUE,include=TRUE}
+# Seed for reproducibility
+set.seed(123)
+# Solution goes here:
+
+
+```                                                               
+
+* 2. (6 points) using a `for` loop with an `ifelse()` function and accumulator
+
+```{r, echo = TRUE, include = TRUE}
+# Solution goes here:
+
+```                                                                      
+
+* 3. (7 points) Vectorial approach using `sapply` (no loops, no if() or ifelse(), no accumulator).
+
+```{r, echo = TRUE, include = TRUE}
+# Solution goes here:
+
+```                                                                        
+
+
+#### Exercise 3: [20 points]
+
+Using only vectorial approach, determine (still using a numerical approach, not exact solution):
+
+* 1. (10 points) In the previous exercise, what is the probability that at most one yellow rock gets selected?
+
+```{r, echo = TRUE, include = TRUE}           
+# Solution goes here:
+
+```                                                                           
+                                                                        
+* 2. (10 points) In the previous exercise, what is the probability that at least one yellow rock gets selected?
+
+```{r, echo = TRUE, include = TRUE}                         
+# Solution goes here:
+
+```     
+
+#### Exercise 4: [20 points]
+
+* 1. (7 points) Suppose you take $1000 to the casino and you play roulette. Every turn, you decide to bet 100 dollars on black. If you win, which occurs with probability 9/19, you win 200, which is a net profit of 100. If you lose, you get nothing. Using a while loop, write code to simulate your adventure until you lose all your money. How many rounds will it take? 
+
+```{r, echo = TRUE, include = TRUE}                         
+# Solution goes here:
+
+```  
+
+* 2. (7 points) Now, repeat the above simulation 1,000 times. What is the average number of times you get to play for each $1000 bankroll you use? Plot a histogram of the number of times you get to play for each bankroll. Comment a sentence on the histogram.
+
+
+```{r, echo = TRUE, include = TRUE}                         
+# Solution goes here:
+
+``` 
+
+* 3. (6 points) Suppose you quit if you double your money. Estimate the probability you double your money by running the simulation 1,000 times.
+
+```{r, echo = TRUE, include = TRUE}                         
+# Solution goes here:
+
+``` 
+
+
