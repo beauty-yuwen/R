@@ -1,0 +1,268 @@
+---
+title: "Homework #5"
+output: pdf_document
+---
+
+#### Instructions
+* Produce your assignment as a RMarkdown document
+  rendered to pdf (knit to pdf).
+* Also submit your Rmd file (it will not be graded but we want it for
+  reference purposes).
+* Show all the code (use `echo = TRUE` as option in R chunks) as
+well as the results.
+* 100 total points.
+* See Syllabus for HW policies.
+
+
+#### Exercise 1: [40 points]
+
+Modify open.account() (the second version, not the first) in 06-functions-closures.R so it is able to:
+
+1. Keep track of the name of the account's holder
+2. Accept withdraws
+3. Print the balance when a withdraw/deposit is made
+4. Print the number of withdraws/deposits when an action is performed
+5. Perform a transfer between two accounts (note this means there is a deposit and a withdraw)
+
+Note: When an account is opened this counts as a deposit.
+
+```{r, echo = TRUE, include = TRUE} 
+# Solution goes here:
+open.account <- function(total,c1) {
+  n.dep <- 1
+  n.out<-0
+  n.trans<-0
+  
+  balance=total
+  print(balance)
+  cat("the first time balance of",c1,"is",balance,".\n")
+  
+  transfer=function(amount1,c2){
+    tt=data.frame(name=c2,amount=amount1)
+    total<<-total-amount1
+    n.trans<<-n.trans+1
+    cat(c1,"transfered",amount1,"to",c2,".\n",sep=" ")
+    balance()
+    return(tt)
+  }
+    
+  deposit <- function(c1,amount) {
+    total <<- total + amount
+    n.dep <<- n.dep + 1
+    cat(c1, " deposited ",amount, ".\n")
+    balance()
+  }
+  
+   withdraw=function(c1,amount){
+     total<<-total-amount
+     n.out <<- n.out + 1
+     cat(c1, " withdrawed ",amount, ".\n")
+     balance()
+   } 
+  
+  balance <- function() {
+    cat("Balance of:", c1,"is",total,".\n")
+    cat(c1," made ", n.dep," deposits", ".\n",c1," made ", n.out," withdraws",".\n",c1," made ",n.trans," transfers",".\n"," averaging ", total/(n.dep+n.out+n.trans),
+        ".\n", sep = "")
+  }
+  
+  
+  list(deposit = deposit,
+       balance = balance,
+       transfer=transfer,
+       withdraw=withdraw)
+}
+modifydeposit=function(c1,amount){
+  if(c1=="ailce") alice$deposit(c1,amount)
+  if(c1=="lily") lily$deposit(c1,amount)
+  if(c1=="ross") ross$deposit(c1,amount)
+}
+lily <- open.account(200,'lily')
+ross <- open.account(100,'ross')
+
+lily$deposit("lily",100)
+ross$deposit("ross",50)
+lily$deposit("lily",30)
+ross$withdraw("ross",20)
+
+t=lily$transfer(70,"ross")
+modifydeposit(t$name,t$amount)
+
+lily$balance()
+ross$balance()
+
+``` 
+
+#### Exercise 2: Splitwise [60 points]
+
+Splitwise is a popular app that allows a group of people to settle debts to one another after multiple transactions where, in each transaction, one person pays for the group. Suppose Ross and Lily are joined by Alice and the three people go on a trip. Alice, Lily, and Ross each pay for separate meals that the three agree to split evenly. I.e., Alice pays X for meal 1, Lily pays Y for meal 2, and Ross pays Z for meal 3, and they agree to settle debts so that everyone pays (X+Y+Z)/3 by the end of the trip. Write a function named splitwise that takes in arguments for how much Alice, Lily, and Ross spent on their meals and outputs the withdraws and transfers such that the three settle up their debts to each other in the most efficient way possible.
+
+First, you will need to withdraw the amount each have spent on meals. Then, transfer money around in the least number of transactions such that debts are settled. Kudos for efficient coding here! Use of many if statements is OK.
+
+Note: You will need to consider the following 3 cases: 
+  1. Where only one person needs to pay one other person.
+  2. Where one person needs to pay two people.
+  3. Where two people need to pay one person.
+
+```{r}
+open.account <- function(total,c1) {
+  n.dep <- 1
+  n.out<-0
+  n.trans<-0
+  
+  balance=total
+  print(balance)
+  cat("the first time balance of",c1,"is",balance,".\n")
+  
+  transfer=function(amount1,c2){
+    tt=data.frame(name=c2,amount=amount1)
+    total<<-total-amount1
+    n.trans<<-n.trans+1
+    cat(c1,"transfered",amount1,"to",c2,".\n",sep=" ")
+    balance()
+    return(tt)
+  }
+    
+  deposit <- function(c1,amount) {
+    total <<- total + amount
+    n.dep <<- n.dep + 1
+    cat(c1, " deposited ",amount, ".\n")
+    balance()
+  }
+  
+   withdraw=function(c1,amount){
+     total<<-total-amount
+     n.out <<- n.out + 1
+     cat(c1, " withdrawed ",amount, ".\n")
+     balance()
+   } 
+  
+  balance <- function() {
+    cat("Balance of:", c1,"is",total,".\n")
+    cat(c1," made ", n.dep," deposits", ".\n",c1," made ", n.out," withdraws",".\n",c1," made ",n.trans," transfers",".\n"," averaging ", total/(n.dep+n.out+n.trans),
+        ".\n", sep = "")
+  }
+  
+  
+  list(deposit = deposit,
+       balance = balance,
+       transfer=transfer,
+       withdraw=withdraw)
+}
+modifydeposit=function(c1,amount){
+  if(c1=="Ailce") alice$deposit(c1,amount)
+  if(c1=="Lily") lily$deposit(c1,amount)
+  if(c1=="Ross") ross$deposit(c1,amount)
+}
+splitwise=function(Alice,Lily, Ross){
+   
+  lily$withdraw('lily',Lily)
+    alice$withdraw('lily',Alice)
+    ross$withdraw('ross',Ross)
+    
+  name=c('Alice','Lily','Ross')
+  m=(Alice+Lily+Ross)/3
+  money=c(Alice-m,Lily-m,Ross-m)
+  data=data.frame(name,money)
+  debtors=data[which(data$money<0),]
+  creditors=data[which(data$money>0),]
+  debt.name=debtors$name
+  cred.name=creditors$name
+  if(nrow(creditors)==1)
+    transferdata=data.frame(debt=debt.name,cred=cred.name,money=-debtors$money)
+  else
+    transferdata=data.frame(debt=debt.name,cred=cred.name,money=creditors$money)
+  return(transferdata)
+}
+gettransfer=function(data){
+  for(i in 1:nrow(data)){
+    print(data[i,1])
+    if(data[i,1]=='Alice')t=alice$transfer(data[i,3],data[i,2])
+    if(data[i,1]=='Lily')t=lily$transfer(data[i,3],data[i,2])
+    if(data[i,1]=='Ross')t=ross$transfer(data[i,3],data[i,2])
+    modifydeposit(t$name,t$amount)
+  }
+}
+
+lily <- open.account(100, "Lily")
+ross <- open.account(100, "Ross")
+alice <- open.account(100, "Alice")
+data=splitwise(Alice=3, Lily=6, Ross=12)
+print(data)
+gettransfer(data)
+
+data=splitwise(Alice=3, Lily=9, Ross=12)
+print(data)
+gettransfer(data)
+
+data=splitwise(Alice=9, Lily=3, Ross=6)
+print(data)
+gettransfer(data)
+
+```
+
+Test your function with the following code by removing the eval=FALSE chunk option.
+
+```{r}
+splitwise <- function(Alice, Lily, Ross) {
+  # Code here
+    m=(Alice+Lily+Ross)/3
+    
+    lily$withdraw('lily',Lily)
+    alice$withdraw('lily',Alice)
+    ross$withdraw('ross',Ross)
+    
+    if(Alice==m)
+      {if(Lily<Ross)
+        lily$transfer(m-Lily,'ross')
+       if(Lily>Ross)
+        ross$transfer(m-Ross,'lily')}
+    if(Lily==m)
+    {if(Alice<Ross)
+        alice$transfer(m-Alice,'ross')
+       if(Alice>Ross)
+        ross$transfer(m-Ross,'alice')}
+    if(Ross==m)
+    {if(Alice<Lily)
+        alice$transfer(m-Alice,'lily')
+       if(Alice>Lily)
+        lily$transfer(m-Lily,'alice')}
+    if(Alice<m)
+      if(Lily<m)
+        if(Ross>m)
+         {alice$transfer(m-Alice,"ross")
+           lily$transfer(m-Lily,"ross")}
+    if(Alice<m)
+      if(Lily>m)
+        if(Ross>m)
+        {alice$transfer(Lily-m,'lily')
+          alice$transfer(Ross-m,'ross')}
+    if(Alice<m)
+      if(Lily>m)
+        if(Ross<m)
+        {alice$transfer(m-Alice,'lily')
+          ross$transfer(m-Ross,'lily')}
+    if(Alice>m)
+      if(Lily<m)
+        if(Ross<m)
+        {lily$transfer(m-Lily,'alice')
+          ross$transfer(m-Ross,'alice')}
+    if(Alice>m)
+      if(Lily>m)
+        if(Ross<m)
+        {ross$transfer(Alice-m,'alice')
+          ross$transfer(Lily-m,'lily')}
+    if(Alice>m)
+      if(Lily<m)
+        if(Ross>m)
+        {lily$transfer(Alice-m,'alice')
+          lily$transfer(Ross-m,'ross')}
+
+  }
+lily <- open.account(100, "Lily")
+ross <- open.account(100, "Ross")
+alice <- open.account(100, "Alice")
+splitwise(Alice=3, Lily=6, Ross=12)
+splitwise(Alice=3, Lily=9, Ross=12)
+splitwise(Alice=9, Lily=3, Ross=6)
+```
